@@ -25,8 +25,8 @@ export default function TimelineExplorer({ onClose }: TimelineExplorerProps) {
 
   const { data: events, isLoading } = useQuery<HistoryEvent[]>({
     queryKey: ["/api/history/events", { 
-      era: selectedEra || undefined,
-      tags: selectedRegion ? [selectedRegion] : undefined 
+      era: selectedEra && selectedEra !== "all" ? selectedEra : undefined,
+      tags: selectedRegion && selectedRegion !== "all" ? [selectedRegion] : undefined 
     }],
   });
 
@@ -74,7 +74,7 @@ export default function TimelineExplorer({ onClose }: TimelineExplorerProps) {
                 <SelectValue placeholder="All Eras" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Eras</SelectItem>
+                <SelectItem value="all">All Eras</SelectItem>
                 {eras.map(era => (
                   <SelectItem key={era} value={era}>{era}</SelectItem>
                 ))}
@@ -86,7 +86,7 @@ export default function TimelineExplorer({ onClose }: TimelineExplorerProps) {
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Regions</SelectItem>
+                <SelectItem value="all">All Regions</SelectItem>
                 {regions.map(region => (
                   <SelectItem key={region} value={region}>{region}</SelectItem>
                 ))}
