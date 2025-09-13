@@ -22,6 +22,15 @@ interface BookReaderProps {
 export default function BookReader({ chapterId, onChapterChange }: BookReaderProps) {
   const [fontSize, setFontSize] = useState("text-lg");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  const getFontSizeClass = () => {
+    switch (fontSize) {
+      case "text-sm": return "text-sm";
+      case "text-lg": return "text-lg";
+      case "text-xl": return "text-xl";
+      default: return "text-lg";
+    }
+  };
 
   const { data: chapter, isLoading } = useQuery<BookChapter>({
     queryKey: ["/api/chapters", chapterId],
@@ -93,7 +102,16 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => setFontSize(fontSize === "text-lg" ? "text-xl" : "text-sm")}
+              onClick={() => {
+                setFontSize(prevSize => {
+                  switch (prevSize) {
+                    case "text-lg": return "text-xl";
+                    case "text-xl": return "text-sm"; 
+                    case "text-sm": return "text-lg";
+                    default: return "text-lg";
+                  }
+                });
+              }}
               data-testid="button-font-size"
             >
               <Type className="w-4 h-4" />
@@ -150,7 +168,7 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
           )}
 
           {/* Book Content */}
-          <div className={`prose prose-lg max-w-none font-serif leading-relaxed ${fontSize}`}>
+          <div className={`prose max-w-none font-serif leading-relaxed ${getFontSizeClass()}`}>
             <div className="first-letter:text-6xl first-letter:font-serif first-letter:font-bold first-letter:text-accent first-letter:mr-2 first-letter:float-left first-letter:leading-none">
               {chapter.narrative.split('\n\n').map((paragraph, index) => (
                 <p key={index} className={index === 0 ? "" : "mt-4"}>
