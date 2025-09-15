@@ -12,9 +12,19 @@ import {
   type ChatSession,
   type InsertChatSession,
   type UserProgress,
-  type InsertUserProgress
+  type InsertUserProgress,
+  users,
+  bookChapters,
+  historyEvents,
+  historyTopics,
+  practices,
+  chatSessions,
+  userProgress
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { eq, and, or, desc, gte, lte, arrayOverlaps } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -419,4 +429,319 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
   }
 }
 
-export const storage = new MemStorage();
+// PostgreSQL Storage Implementation
+export class PostgresStorage implements IStorage {
+  private db: ReturnType<typeof drizzle>;
+
+  constructor() {
+    if (!process.env.DATABASE_URL) {
+      throw new Error("DATABASE_URL environment variable is required for PostgreSQL storage");
+    }
+    this.db = drizzle(neon(process.env.DATABASE_URL));
+  }
+
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.id, id));
+    return result[0];
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await this.db.select().from(users).where(eq(users.email, email));
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const result = await this.db.insert(users).values(user).returning();
+    return result[0];
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const result = await this.db.update(users)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Book operations
+  async getChapter(id: string): Promise<BookChapter | undefined> {
+    const result = await this.db.select().from(bookChapters).where(eq(bookChapters.id, id));
+    return result[0];
+  }
+
+  async getAllChapters(): Promise<BookChapter[]> {
+    return await this.db.select().from(bookChapters).orderBy(bookChapters.chapterNumber);
+  }
+
+  async createChapter(chapter: InsertBookChapter): Promise<BookChapter> {
+    const result = await this.db.insert(bookChapters).values(chapter).returning();
+    return result[0];
+  }
+
+  // History operations
+  async getHistoryEvents(filters?: { era?: string; year?: number; tags?: string[] }): Promise<HistoryEvent[]> {
+    let query = this.db.select().from(historyEvents);
+    const conditions = [];
+
+    if (filters?.era) {
+      conditions.push(eq(historyEvents.era, filters.era));
+    }
+    
+    if (filters?.year) {
+      // Match MemStorage behavior: +/-100 year window
+      conditions.push(
+        and(
+          gte(historyEvents.year, filters.year - 100),
+          lte(historyEvents.year, filters.year + 100)
+        )
+      );
+    }
+    
+    if (filters?.tags?.length) {
+      // Filter events that have any of the specified tags
+      const tagConditions = filters.tags.map(tag => 
+        arrayOverlaps(historyEvents.tags, [tag])
+      );
+      conditions.push(or(...tagConditions));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    // Match MemStorage behavior: order by year descending
+    return await query.orderBy(desc(historyEvents.year));
+  }
+
+  async getHistoryEvent(id: string): Promise<HistoryEvent | undefined> {
+    const result = await this.db.select().from(historyEvents).where(eq(historyEvents.id, id));
+    return result[0];
+  }
+
+  async createHistoryEvent(event: InsertHistoryEvent): Promise<HistoryEvent> {
+    const result = await this.db.insert(historyEvents).values(event).returning();
+    return result[0];
+  }
+
+  async getHistoryTopics(): Promise<HistoryTopic[]> {
+    return await this.db.select().from(historyTopics);
+  }
+
+  async getHistoryTopic(id: string): Promise<HistoryTopic | undefined> {
+    const result = await this.db.select().from(historyTopics).where(eq(historyTopics.id, id));
+    return result[0];
+  }
+
+  async createHistoryTopic(topic: InsertHistoryTopic): Promise<HistoryTopic> {
+    const result = await this.db.insert(historyTopics).values(topic).returning();
+    return result[0];
+  }
+
+  // Practice operations
+  async getPractices(type?: string): Promise<Practice[]> {
+    if (type) {
+      return await this.db.select().from(practices).where(eq(practices.type, type));
+    }
+    return await this.db.select().from(practices);
+  }
+
+  async getPractice(id: string): Promise<Practice | undefined> {
+    const result = await this.db.select().from(practices).where(eq(practices.id, id));
+    return result[0];
+  }
+
+  async createPractice(practice: InsertPractice): Promise<Practice> {
+    const result = await this.db.insert(practices).values(practice).returning();
+    return result[0];
+  }
+
+  // Chat operations
+  async getChatSession(id: string): Promise<ChatSession | undefined> {
+    const result = await this.db.select().from(chatSessions).where(eq(chatSessions.id, id));
+    return result[0];
+  }
+
+  async getChatSessionsByUser(userId: string): Promise<ChatSession[]> {
+    return await this.db.select()
+      .from(chatSessions)
+      .where(eq(chatSessions.userId, userId))
+      .orderBy(desc(chatSessions.timestamp));
+  }
+
+  async createChatSession(session: InsertChatSession): Promise<ChatSession> {
+    const result = await this.db.insert(chatSessions).values(session).returning();
+    return result[0];
+  }
+
+  async updateChatSession(id: string, messages: any[]): Promise<ChatSession | undefined> {
+    const result = await this.db.update(chatSessions)
+      .set({ messages })
+      .where(eq(chatSessions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Progress operations
+  async getUserProgress(userId: string): Promise<UserProgress[]> {
+    return await this.db.select().from(userProgress).where(eq(userProgress.userId, userId));
+  }
+
+  async getUserChapterProgress(userId: string, chapterId: string): Promise<UserProgress | undefined> {
+    const result = await this.db.select()
+      .from(userProgress)
+      .where(and(eq(userProgress.userId, userId), eq(userProgress.chapterId, chapterId)));
+    return result[0];
+  }
+
+  async createOrUpdateProgress(progress: InsertUserProgress): Promise<UserProgress> {
+    const existing = await this.getUserChapterProgress(progress.userId!, progress.chapterId!);
+    
+    if (existing) {
+      const result = await this.db.update(userProgress)
+        .set({ ...progress, timestamp: new Date() })
+        .where(eq(userProgress.id, existing.id))
+        .returning();
+      return result[0];
+    } else {
+      const result = await this.db.insert(userProgress).values(progress).returning();
+      return result[0];
+    }
+  }
+
+  // Seeding function to populate database with initial data
+  async seedDatabase(): Promise<void> {
+    // Check if data already exists
+    const existingChapters = await this.getAllChapters();
+    if (existingChapters.length > 0) {
+      console.log("Database already seeded, skipping...");
+      return;
+    }
+
+    console.log("Seeding database with initial data...");
+
+    // Seed book chapters from "The Weavers of Eternity: A Chronicle of the Egyptian Gods"
+    await this.createChapter({
+      id: "prologue",
+      title: "The Silence Before All",
+      chapterNumber: 0,
+      narrative: `Before the first dawn, before the river sang, before sand and star were named, there was silence. Not the silence of sleep, nor the silence after death, but the silence of a world unborn.
+
+There was no earth, no sky, no air. Only a vast and endless sea of shadowed waters stretched into eternity. This was Nu, the limitless expanse, the boundless nothingness from which all would rise.
+
+The waters were heavy with possibility, yet empty of form. Within Nu drifted the seeds of gods not yet awakened, destinies unspoken, and worlds that had not yet drawn breath.
+
+And in that endless depth, the stillness began to tremble.
+
+A whisper moved through the waters – a stirring, a breath. Creation longed to be born, and the first story began.`,
+      commentary: "The ancient Egyptian creation myth begins not with a bang, but with infinite potential. Nu represents the primordial chaos from which all order emerges, a concept that echoes through many world mythologies.",
+      figures: ["https://images.unsplash.com/photo-1445905595283-21f8ae8a33d2"],
+      tags: ["Creation", "Nu", "Primordial Waters", "Beginning"],
+      timeSpan: "Before Time",
+      era: "Mythological"
+    });
+
+    await this.createChapter({
+      id: "ch_1",
+      title: "Nu – The Infinite Waters",
+      chapterNumber: 1,
+      narrative: `Nu was not god in the way others would be – with temples and names sung in hymns – but rather the canvas upon which existence would be painted. He was the dark water, the eternal tide, the father of beginnings and the grave of endings.
+
+In the boundless expanse of his being, all possibilities swirled like currents beneath a moonless sky. Here, time had no meaning, for there was no sun to mark its passage. Space held no boundaries, for there were no shores to contain the endless sea.
+
+Yet within this apparent emptiness lay the greatest abundance. Every star that would shine, every grain of sand that would shift, every heartbeat that would echo through eternity – all resided in Nu's infinite embrace.
+
+The waters spoke in whispers older than sound, carrying stories that had never been told. And from these primordial depths, the first stirring of consciousness began to rise.`,
+      commentary: "Nu represents the concept of infinite potential – the state before creation where all possibilities exist simultaneously. In Egyptian cosmology, he remains present throughout existence as the underlying foundation of reality.",
+      figures: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4"],
+      tags: ["Nu", "Infinite Waters", "Primordial", "Creation"],
+      timeSpan: "Before Time",
+      era: "Mythological"
+    });
+
+    await this.createChapter({
+      id: "ch_2", 
+      title: "Kek & Heh – Shadows and Infinity",
+      chapterNumber: 2,
+      narrative: `From the deep currents of Nu emerged the first duality – not of light and dark as mortals understand, but of shadow and eternity.
+
+Kek emerged as the embodiment of the primordial darkness, not as absence but as potential. His darkness was the fertile void where all things gestated before birth. In his realm, concepts took shape before becoming real, dreams crystallized into destiny.
+
+Beside him stirred Heh, the personification of infinity itself. Where Kek was the bounded darkness that made light meaningful, Heh was the endless expanse that gave context to all finite things. Together, they established the fundamental rhythm of existence – the bounded and the boundless, the finite and the eternal.
+
+Their dance created the first cosmic music, a rhythm that would pulse through all creation. In the interplay of Kek's defining shadows and Heh's limitless expanse, the stage was set for form to emerge from formlessness.`,
+      commentary: "Kek and Heh represent complementary cosmic principles. Their emergence from Nu shows how the ancient Egyptians understood that even fundamental dualities arise from an underlying unity.",
+      figures: ["https://images.unsplash.com/photo-1506905925346-21bda4d32df4"],
+      tags: ["Kek", "Heh", "Duality", "Shadow", "Infinity"],
+      timeSpan: "Dawn of Time",
+      era: "Mythological"
+    });
+
+    await this.createChapter({
+      id: "ch_3",
+      title: "Amun & Mut – The Hidden and the Mother",
+      chapterNumber: 3,
+      narrative: `As the cosmic forces settled into their eternal dance, two more powers emerged from Nu's depths – powers that would shape the very nature of divinity itself.
+
+Amun arose as the Hidden One, the god whose essence could never be fully grasped or contained. He was the breath behind all breath, the will behind all action, the invisible force that moves the seen world. Even his fellow gods would struggle to comprehend his true nature, for Amun was the mystery that dwells at the heart of all mysteries.
+
+With him came Mut, the Great Mother, whose womb would nurture all that was to come. She was not merely a vessel for creation, but creation's own wisdom and protective embrace. In her eyes blazed the fierce love that would defend the young cosmos from the chaos that forever sought to reclaim it.
+
+Together, Amun and Mut established the pattern of hidden wisdom and manifest nurturing that would echo through all divine relationships. The Hidden and the Mother – the unknowable truth and the protective love that makes existence possible.`,
+      commentary: "Amun and Mut represent the complementary aspects of divine mystery and divine accessibility. Their union shows how the transcendent must work through the immanent to touch mortal existence.",
+      figures: ["https://images.unsplash.com/photo-1578662996442-48f60103fc96"],
+      tags: ["Amun", "Mut", "Hidden God", "Great Mother", "Divine Mystery"],
+      timeSpan: "Age of First Gods",
+      era: "Mythological"
+    });
+
+    // Seed historical events
+    await this.createHistoryEvent({
+      id: "ancient_egypt_unification",
+      title: "Unification of Upper and Lower Egypt",
+      year: -3100,
+      era: "Ancient Egypt",
+      tags: ["Egypt", "Unification", "Pharaoh", "Civilization"],
+      description: "King Menes (possibly Narmer) unifies Upper and Lower Egypt, founding the first dynasty and establishing Memphis as the capital.",
+      region: "Egypt"
+    });
+
+    await this.createHistoryEvent({
+      id: "pyramid_construction",
+      title: "Great Pyramid of Giza Construction",
+      year: -2580,
+      era: "Old Kingdom",
+      tags: ["Pyramid", "Giza", "Pharaoh", "Architecture"],
+      description: "Construction of the Great Pyramid of Giza under Pharaoh Khufu, one of the Seven Wonders of the Ancient World.",
+      region: "Egypt"
+    });
+
+    // Seed meditation practices
+    await this.createPractice({
+      id: "breath_of_nu",
+      type: "meditation",
+      title: "Breath of Nu - Primordial Waters",
+      duration: 20,
+      instructions: "Connect with the infinite potential of Nu, the primordial waters. Breathe deeply and imagine yourself floating in the cosmic ocean before creation. Feel the boundless possibilities flowing around and through you. With each breath, connect to the source of all existence.",
+      origin: "Inspired by Nu from The Weavers of Eternity",
+      tags: ["Nu", "Primordial", "Infinite Potential", "Cosmic Ocean"]
+    });
+
+    await this.createPractice({
+      id: "shadow_light_balance",
+      type: "meditation", 
+      title: "Shadow and Light Balance - Kek & Heh",
+      duration: 15,
+      instructions: "Experience the cosmic balance of Kek (shadow) and Heh (infinity). Begin in darkness, acknowledging the shadows within and around you. Then expand your awareness to touch infinity - the endless expanse of time and space. Feel how darkness gives meaning to light, and how infinity gives context to the finite moment.",
+      origin: "Inspired by Kek and Heh from The Weavers of Eternity",
+      tags: ["Kek", "Heh", "Balance", "Shadow", "Infinity"]
+    });
+
+    console.log("Database seeding completed!");
+  }
+}
+
+export const storage = new PostgresStorage();
+
+// Initialize the database with seed data
+storage.seedDatabase().catch(console.error);
