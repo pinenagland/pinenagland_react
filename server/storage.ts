@@ -68,23 +68,105 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
-    // Seed book chapters
-    const chapter41: BookChapter = {
-      id: "ch_41",
-      title: "Horus – The Falcon God of Kingship",
-      chapterNumber: 41,
-      narrative: `In the vast expanse of the Nile Valley, where the river's life-giving waters carved civilization from desert sands, there soared a divine falcon whose piercing gaze would shape the destiny of pharaohs and the cosmic order itself. Horus, the sky god whose name echoes through millennia, represents more than myth—he embodies the living bridge between earthly kingship and divine authority.
+    // Seed book chapters from "The Weavers of Eternity: A Chronicle of the Egyptian Gods"
+    
+    // Prologue
+    const prologue: BookChapter = {
+      id: "prologue",
+      title: "The Silence Before All",
+      chapterNumber: 0,
+      narrative: `Before the first dawn, before the river sang, before sand and star were named, there was silence. Not the silence of sleep, nor the silence after death, but the silence of a world unborn.
 
-The ancient Egyptians understood what modern archaeology confirms: that their civilization emerged not from isolation, but from the confluence of African wisdom traditions, Mediterranean trade routes, and innovations that would influence the entire ancient world. In this context, Horus becomes not merely a local deity, but a symbol of the universal human quest to understand leadership, justice, and the responsibilities of power.
+There was no earth, no sky, no air. Only a vast and endless sea of shadowed waters stretched into eternity. This was Nu, the limitless expanse, the boundless nothingness from which all would rise.
 
-Archaeological evidence from the Predynastic Period (c. 6000-3100 BCE) reveals falcon imagery in burial sites and ceremonial objects, suggesting that the Horus cult predates the unification of Upper and Lower Egypt. The famous Narmer Palette, dating to approximately 3100 BCE, shows the falcon god overseeing the pharaoh's victory, establishing a template for divine kingship that would endure for three millennia.`,
-      commentary: "The mythology of Horus intertwines with historical events in ways that reveal deep truths about ancient Egyptian society. The story of Horus's battle with Seth reflects not only cosmic struggle between order and chaos, but also real political conflicts that shaped early Egyptian dynasties.",
-      figures: ["https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"],
-      tags: ["Ancient Egypt", "Mythology", "Kingship", "Nile Valley"],
-      timeSpan: "3100 BCE - 332 BCE",
-      era: "Ancient History"
+The waters were heavy with possibility, yet empty of form. Within Nu drifted the seeds of gods not yet awakened, destinies unspoken, and worlds that had not yet drawn breath.
+
+And in that endless depth, the stillness began to tremble.
+
+A whisper moved through the waters – a stirring, a breath. Creation longed to be born, and the first story began.`,
+      commentary: "The ancient Egyptian creation myth begins not with a bang, but with infinite potential. Nu represents the primordial chaos from which all order emerges, a concept that echoes through many world mythologies.",
+      figures: ["https://images.unsplash.com/photo-1445905595283-21f8ae8a33d2"],
+      tags: ["Creation", "Nu", "Primordial Waters", "Beginning"],
+      timeSpan: "Before Time",
+      era: "Mythological"
     };
-    this.chapters.set(chapter41.id, chapter41);
+    this.chapters.set(prologue.id, prologue);
+
+    // Chapter 1 - Nu
+    const chapter1: BookChapter = {
+      id: "ch_1",
+      title: "Nu – The Infinite Waters",
+      chapterNumber: 1,
+      narrative: `Nu was not god in the way others would be – with temples and names sung in hymns – but rather the canvas upon which existence would be painted. He was the dark water, the eternal tide, the father of beginnings and the grave of endings.
+
+To look upon him was to see nothing and everything. To touch him was to feel the pulse of eternity.
+
+Yet even Nu, vast and unending, felt the ache of loneliness.
+
+He drifted within himself, tides folding upon tides, whispering: "What use is infinity if no one bears witness to its depth?"
+
+And so from the waters stirred the first companions – shapes born from his essence. Shadows stretched and hardened into forms. From Nu's depths came Kek, the god of darkness, and his twin flame Heh, the god of infinity. From the hidden corners of his waters emerged Amun, the concealed one, and beside him, radiant in quiet majesty, came Mut, the great mother.
+
+Each greeted Nu in silence, for there were no words yet, only the weight of awareness.
+
+Creation had begun, and Nu receded slightly, not vanishing but watching. For though the gods would rise and clash, love and destroy, Nu would remain – the infinite sea that cradles both life and death.`,
+      commentary: "Nu represents the concept of primordial chaos that exists before creation. Unlike the destructive chaos we often imagine, Nu is pregnant with potential – the source from which all order and meaning emerge.",
+      figures: ["https://images.unsplash.com/photo-1439066615861-d1af74d74000"],
+      tags: ["Nu", "Primordial Waters", "First Gods", "Creation"],
+      timeSpan: "Dawn of Creation",
+      era: "Mythological"
+    };
+    this.chapters.set(chapter1.id, chapter1);
+
+    // Chapter 2 - Kek & Heh
+    const chapter2: BookChapter = {
+      id: "ch_2",
+      title: "Kek & Heh – Shadows and Infinity",
+      chapterNumber: 2,
+      narrative: `From the still waters of Nu, shapes began to stir. The first was a darkness thicker than night, a presence that seemed to devour even the faintest glimmer of becoming. This was Kek, the god of shadow, cloaked in the eternal dusk that lingers before dawn.
+
+Yet beside him rose another – vast, unending, without boundary – Heh, the god of infinity. He stretched in every direction, an endless horizon, and where Kek consumed light, Heh multiplied time, granting it no end.
+
+They looked upon one another in the twilight of unformed creation.
+
+Kek spoke first, his voice low and hollow, like wind echoing in a cavern: "I am the veil. I am the silence before the cry. Without me, light would blind itself, and order would have no rest."
+
+Heh's laughter was like the rolling of distant thunder. "And I am the stretch of eternity. Without me, all things would die before they were born. I am the forever upon which the fleeting stands."
+
+Together, they drifted through Nu's waters, shaping balance – the limits and the limitless, the night and the eternal expanse.`,
+      commentary: "Kek and Heh represent fundamental forces in Egyptian cosmology – the balance between darkness and infinity, between limits and limitlessness. They establish the first cosmic dualities from which more complex creation can emerge.",
+      figures: ["https://images.unsplash.com/photo-1502134249126-9f3755a50d78"],
+      tags: ["Kek", "Heh", "Shadow", "Infinity", "Balance"],
+      timeSpan: "Early Creation",
+      era: "Mythological"
+    };
+    this.chapters.set(chapter2.id, chapter2);
+
+    // Chapter 3 - Amun & Mut
+    const chapter3: BookChapter = {
+      id: "ch_3",
+      title: "Amun & Mut – The Hidden and the Mother",
+      chapterNumber: 3,
+      narrative: `From the waters of Nu, shaped by the silence of Kek and stretched by the infinity of Heh, came a presence unseen, unknowable, unfathomable.
+
+This was Amun, the Hidden One.
+
+He was not shadow, nor light, nor sky, nor earth – but something between, something that slipped through grasp and gaze. To behold him was to feel as though he were always just behind you, or just beyond the veil, never fully caught.
+
+Nu regarded him with awe. "You are mystery given breath. From you, the unknown will rise, for without mystery, knowledge has no meaning."
+
+Amun bowed his head, his eyes veiled. His voice was quiet, but it carried across the eternal waters: "I am the unseen force. I move through what is, what was, and what will be. None shall name my true form, for it is in being hidden that I endure."
+
+And beside him, rising like the dawn after endless night, came Mut, the Mother. She was vast yet gentle, her presence radiant, her embrace wide enough to hold worlds not yet born. Her crown bore the double plumes of majesty, and her eyes shone with the promise of nurture.
+
+Amun and Mut stood side by side, and in their union, creation felt the stirrings of order. Where Amun was unseen, Mut gave form. Where Mut offered life, Amun lent spirit.`,
+      commentary: "Amun and Mut represent the balance between the hidden and the revealed, the mysterious and the nurturing. Their partnership establishes the foundation for both divine kingship and the protection of life.",
+      figures: ["https://images.unsplash.com/photo-1578662996442-48f60103fc96"],
+      tags: ["Amun", "Mut", "Hidden One", "Mother", "Mystery", "Nurture"],
+      timeSpan: "Formation of Order",
+      era: "Mythological"
+    };
+    this.chapters.set(chapter3.id, chapter3);
 
     // Seed history events
     const pyramidsEvent: HistoryEvent = {
@@ -120,28 +202,50 @@ Archaeological evidence from the Predynastic Period (c. 6000-3100 BCE) reveals f
     };
     this.historyEvents.set(neolithic.id, neolithic);
 
-    // Seed practices
-    const breathOfRa: Practice = {
-      id: "breath_of_ra",
-      type: "meditation",
-      title: "Breath of Ra",
-      duration: 10,
-      instructions: "Ancient Egyptian breathing technique that aligns with the solar cycle, promoting vitality and mental clarity. Begin by facing east and breathing in rhythm with the imagined rising sun...",
-      origin: "Ancient Egyptian temple practices from Heliopolis",
-      tags: ["Egyptian", "Solar", "Breathing"]
+    const creationMyths: HistoryEvent = {
+      id: "egyptian_creation_myths",
+      title: "Development of Egyptian Creation Myths",
+      year: -3500,
+      era: "Predynastic",
+      tags: ["Egypt", "Mythology", "Religion", "Creation"],
+      description: "The foundational myths of Nu, Atum, and the first gods begin to take shape in early Egyptian religious thought, establishing the cosmological framework that would influence all later Egyptian civilization.",
+      region: "Egypt"
     };
-    this.practices.set(breathOfRa.id, breathOfRa);
+    this.historyEvents.set(creationMyths.id, creationMyths);
 
-    const thirdEye: Practice = {
-      id: "third_eye_awakening",
+    // Seed practices aligned with "The Weavers of Eternity"
+    const breathOfNu: Practice = {
+      id: "breath_of_nu",
       type: "meditation",
-      title: "Third Eye Awakening",
-      duration: 15,
-      instructions: "Sacred geometry meditation focusing on the eye of Horus and inner vision. Combines ancient Egyptian wisdom with modern neuroscience understanding...",
-      origin: "Ancient Egyptian mystical traditions",
-      tags: ["Egyptian", "Consciousness", "Vision"]
+      title: "Breath of Nu - Primordial Waters",
+      duration: 12,
+      instructions: "Connect with the infinite waters of Nu, the source of all creation. Sit comfortably and imagine yourself floating in vast, dark waters. Breathe deeply, allowing each breath to connect you with the primordial source. Feel the infinite potential within the stillness, the pregnant silence from which all existence emerges.",
+      origin: "Based on the primordial Nu from The Weavers of Eternity",
+      tags: ["Nu", "Primordial", "Creation", "Water"]
     };
-    this.practices.set(thirdEye.id, thirdEye);
+    this.practices.set(breathOfNu.id, breathOfNu);
+
+    const shadowAndLight: Practice = {
+      id: "kek_heh_balance",
+      type: "meditation",
+      title: "Shadow and Infinity - Kek & Heh Balance",
+      duration: 15,
+      instructions: "Experience the cosmic balance of Kek (shadow) and Heh (infinity). Begin in darkness, acknowledging the shadows within and around you. Then expand your awareness to touch infinity - the endless expanse of time and space. Feel how darkness gives meaning to light, and how infinity gives context to the finite moment.",
+      origin: "Inspired by Kek and Heh from The Weavers of Eternity",
+      tags: ["Kek", "Heh", "Balance", "Shadow", "Infinity"]
+    };
+    this.practices.set(shadowAndLight.id, shadowAndLight);
+
+    const hiddenMother: Practice = {
+      id: "amun_mut_mystery",
+      type: "meditation",
+      title: "The Hidden and the Mother - Amun & Mut",
+      duration: 18,
+      instructions: "Explore the mystery of the hidden (Amun) and the nurturing power of the divine mother (Mut). Sit in contemplation of what remains hidden in your life, the mysteries you cannot grasp. Then open to the nurturing, protective energy that surrounds and sustains you. Feel the balance between the unknown and the caring embrace of existence.",
+      origin: "Based on Amun and Mut from The Weavers of Eternity",
+      tags: ["Amun", "Mut", "Mystery", "Mother", "Hidden", "Nurture"]
+    };
+    this.practices.set(hiddenMother.id, hiddenMother);
   }
 
   // User operations
