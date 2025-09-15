@@ -29,57 +29,92 @@ export default function CharacterGallery({ onClose }: CharacterGalleryProps) {
     queryKey: ["/api/chapters"]
   });
 
-  // Extract characters from the book chapters
+  // Extract characters from the book chapters aligned with semi-academic retelling format
   const extractCharacters = (chapters: BookChapter[]): Character[] => {
     const characters: Character[] = [
       {
-        name: "Nu",
-        description: "The primordial waters of creation, the infinite sea from which all existence emerged. Nu is not a god in the traditional sense, but rather the canvas upon which existence was painted - the dark water, the eternal tide, the father of beginnings and the grave of endings.",
-        chapters: ["prologue", "ch_1"],
-        domains: ["Primordial Waters", "Creation", "Infinity", "Source of All"],
+        name: "Nu – The Primordial Waters",
+        description: "Nu was the boundless chaos from which creation emerged. He was not worshipped with temples but acknowledged as the eternal ocean underlying existence. Nu represents both chaos and potential—a reminder of the cosmos' fragile order sustained by the gods.",
+        chapters: ["prologue", "ch_59"],
+        domains: ["Primordial Waters", "Chaos", "Creation", "Eternal Ocean"],
         image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000"
       },
       {
-        name: "Kek",
-        description: "The god of darkness and shadow, cloaked in eternal dusk that lingers before dawn. Kek represents the veil, the silence before the cry, and provides the necessary darkness that gives light meaning and offers rest to order.",
-        chapters: ["ch_1", "ch_2"],
-        domains: ["Darkness", "Shadow", "Night", "Balance"],
-        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
-      },
-      {
-        name: "Heh",
-        description: "The god of infinity and endless expanse, stretching in every direction without boundary. Heh multiplies time and grants it no end, representing the forever upon which the fleeting stands.",
-        chapters: ["ch_1", "ch_2"],
-        domains: ["Infinity", "Time", "Eternity", "Endless Expanse"],
-        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
-      },
-      {
-        name: "Amun",
-        description: "The Hidden One, the mysterious and unknowable presence that slips through grasp and gaze. Amun is the unseen force that moves through what is, what was, and what will be. His true form cannot be named, for it is in being hidden that he endures.",
-        chapters: ["ch_1", "ch_3"],
-        domains: ["Mystery", "Hidden Force", "The Unknown", "Divine Concealment"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      },
-      {
-        name: "Mut",
-        description: "The Great Mother, vast yet gentle, whose presence is radiant and whose embrace is wide enough to hold worlds not yet born. She wears the double plumes of majesty and her eyes shine with the promise of nurture.",
-        chapters: ["ch_1", "ch_3"],
-        domains: ["Motherhood", "Nurture", "Protection", "Divine Majesty"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      },
-      {
-        name: "Tatenen",
-        description: "The rising earth, emerging from the primordial waters to form the first land. Tatenen represents the physical manifestation of creation, the solid ground upon which life can flourish.",
-        chapters: ["ch_4"],
-        domains: ["Earth", "Land", "Foundation", "Physical Creation"],
+        name: "Ra – The Solar King",
+        description: "Ra, the great sun god, sailed daily across the heavens and nightly through the underworld. Each dawn was a triumph over Apophis, the serpent of chaos. Pharaohs styled themselves as 'sons of Ra,' inheritors of his divine light. Ra's cycle reflected Egyptian cosmology: life was a struggle of order against chaos, repeated every day, ensuring cosmic stability.",
+        chapters: ["ch_61"],
+        domains: ["Sun", "Kingship", "Divine Light", "Cosmic Order"],
         image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
       },
       {
-        name: "Khonsu",
-        description: "The divine timekeeper, the youthful god who marks the passage of time and governs the cycles of the moon. Khonsu brings order to temporal existence and guides the rhythm of cosmic cycles.",
-        chapters: ["ch_5"],
-        domains: ["Time", "Moon", "Cycles", "Youth"],
+        name: "Horus – The Falcon God of Kingship",
+        description: "Horus, the falcon soaring over the Nile, was the eternal symbol of kingship. As the avenger of his father Osiris, he waged long war against his uncle Seth, the god of chaos. Every Pharaoh thereafter was considered the 'Living Horus,' an embodiment of divine authority.",
+        chapters: ["ch_41"],
+        domains: ["Kingship", "Vengeance", "Divine Authority", "Sky"],
+        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
+      },
+      {
+        name: "Isis – The Great Mother",
+        description: "Isis was both healer and sorceress, mother and queen. Her devotion to Osiris after his murder exemplified the power of love and magic to overcome death. She restored Osiris to life long enough to conceive Horus, thus ensuring the continuation of kingship. Her worship spread far beyond Egypt, reaching Rome.",
+        chapters: ["ch_42"],
+        domains: ["Magic", "Motherhood", "Healing", "Divine Love"],
+        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
+      },
+      {
+        name: "Osiris – The Lord of the Afterlife",
+        description: "Osiris ruled as the first king of Egypt until betrayed by his brother Seth. Dismembered and scattered, he was restored by Isis and embalmed by Anubis. From then on, he reigned not over the living but over the dead, granting immortality to those judged righteous. Osiris symbolizes renewal and the agricultural cycle.",
+        chapters: ["ch_43"],
+        domains: ["Afterlife", "Death", "Resurrection", "Judgment"],
         image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
+      },
+      {
+        name: "Seth – The Lord of Chaos",
+        description: "Seth, the desert storm, was both protector and betrayer. He defended Ra's solar barque against the serpent Apophis but murdered his own brother Osiris. His strange, composite animal form reflected his role as outsider and necessary disruptor. Seth embodies the duality of chaos: destructive yet at times essential.",
+        chapters: ["ch_44"],
+        domains: ["Chaos", "Desert", "Storm", "Necessary Discord"],
+        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
+      },
+      {
+        name: "Ma'at – The Feather of Truth",
+        description: "Ma'at was not only a goddess but also the principle of truth, balance, and cosmic order. Every Pharaoh swore to uphold Ma'at. In the Hall of Judgment, the hearts of the dead were weighed against her feather. Ma'at was central to Egyptian religion and society.",
+        chapters: ["ch_46"],
+        domains: ["Truth", "Justice", "Cosmic Order", "Balance"],
+        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
+      },
+      {
+        name: "Thoth – The Divine Scribe",
+        description: "Thoth, ibis-headed lord of wisdom, measured time, invented writing, and mediated disputes among the gods. In the underworld, he recorded the verdict of the weighing of hearts. Thoth symbolizes intellect and order, essential to law, astronomy, and writing—cornerstones of Egyptian civilization.",
+        chapters: ["ch_63"],
+        domains: ["Wisdom", "Writing", "Time", "Divine Knowledge"],
+        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
+      },
+      {
+        name: "Anubis – Guardian of the Dead",
+        description: "Jackal-headed Anubis embalmed Osiris and became patron of mummification. He guided souls through the necropolis and ensured their hearts were weighed justly. Anubis reflects the Egyptian concern with proper burial and assured people that death could be navigated safely.",
+        chapters: ["ch_64"],
+        domains: ["Death", "Mummification", "Burial", "Soul Guidance"],
+        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
+      },
+      {
+        name: "Khonsu – The Moon Wanderer",
+        description: "Khonsu, god of the moon, traveled nightly across the sky. Known as a healer, his name means 'traveler.' Myths depict him gambling away time to Thoth, explaining the extra days added to the calendar. Khonsu connects lunar cycles with healing, timekeeping, and fertility.",
+        chapters: ["ch_50"],
+        domains: ["Moon", "Healing", "Time", "Travel"],
+        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
+      },
+      {
+        name: "Amun – The Hidden One",
+        description: "Amun began as a local Theban god but rose to prominence as 'Amun-Ra,' king of the gods. Invisible and mysterious, he was considered the unseen force behind existence. The political rise of Thebes paralleled the rise of Amun, showing how theology followed history.",
+        chapters: ["ch_52"],
+        domains: ["Mystery", "Hidden Power", "Kingship", "Thebes"],
+        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
+      },
+      {
+        name: "Mut – The Mother Goddess",
+        description: "Mut, consort of Amun, was depicted as a vulture goddess, motherly yet regal. She represented protection and sovereignty. Mut's role underscores the maternal dimension of kingship: the Pharaoh was 'son of Mut,' nurtured by divine motherhood.",
+        chapters: ["ch_53"],
+        domains: ["Motherhood", "Protection", "Sovereignty", "Royal Nurture"],
+        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
       }
     ];
 
