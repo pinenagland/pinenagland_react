@@ -231,6 +231,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Deity routes - Public access for character gallery
+  app.get("/api/deities", async (req, res) => {
+    try {
+      const { part } = req.query;
+      let deities;
+      
+      if (part) {
+        deities = await storage.getDeitiesByPart(part as string);
+      } else {
+        deities = await storage.getAllDeities();
+      }
+      
+      res.json(deities);
+    } catch (error) {
+      console.error('Get deities error:', error);
+      res.status(500).json({ message: "Failed to get deities" });
+    }
+  });
+
+  app.get("/api/deities/:id", async (req, res) => {
+    try {
+      const deity = await storage.getDeity(req.params.id);
+      if (!deity) {
+        return res.status(404).json({ message: "Deity not found" });
+      }
+      res.json(deity);
+    } catch (error) {
+      console.error('Get deity error:', error);
+      res.status(500).json({ message: "Failed to get deity" });
+    }
+  });
+
   // Chat and AI routes
   app.post("/api/chat/sessions", verifyFirebaseToken, async (req, res) => {
     try {

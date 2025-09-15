@@ -15,6 +15,8 @@ import {
   type InsertUserProgress,
   type PracticeSession,
   type InsertPracticeSession,
+  type Deity,
+  type InsertDeity,
   users,
   bookChapters,
   historyEvents,
@@ -22,7 +24,8 @@ import {
   practices,
   chatSessions,
   userProgress,
-  practiceSessions
+  practiceSessions,
+  deities
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -70,6 +73,12 @@ export interface IStorage {
   getPracticeSessions(userId: string): Promise<PracticeSession[]>;
   createPracticeSession(session: InsertPracticeSession): Promise<PracticeSession>;
   getUserPracticeStats(userId: string): Promise<{ totalSessions: number; totalDuration: number; completedSessions: number; }>;
+
+  // Deity operations
+  getAllDeities(): Promise<Deity[]>;
+  getDeity(id: string): Promise<Deity | undefined>;
+  getDeitiesByPart(part: string): Promise<Deity[]>;
+  createDeity(deity: InsertDeity): Promise<Deity>;
 }
 
 export class MemStorage implements IStorage {
@@ -81,6 +90,7 @@ export class MemStorage implements IStorage {
   private chatSessions: Map<string, ChatSession> = new Map();
   private userProgress: Map<string, UserProgress> = new Map();
   private practiceSessions: Map<string, PracticeSession> = new Map();
+  private deities: Map<string, Deity> = new Map();
 
   constructor() {
     this.seedData();
@@ -311,6 +321,375 @@ export class MemStorage implements IStorage {
     // Note: Complete implementation would include all 72 chapters
     // This demonstrates the structure and pattern for the full dataset
     // Each chapter includes: narrative excerpt, commentary, metadata, and proper classification
+
+    // Seed comprehensive deities from "The Weavers of Eternity: A Chronicle of the Egyptian Gods"
+    // Complete coverage of Parts I-VII with canonical data from the seeded chapters
+    
+    // PART I – THE FIRST BREATH
+    const nu: Deity = {
+      id: "nu",
+      name: "Nu",
+      title: "The Infinite Waters",
+      description: "Nu was not god in the way others would be – with temples and names sung in hymns – but rather the canvas upon which existence would be painted. The primordial waters from which all creation emerges.",
+      domains: ["Primordial Waters", "Chaos", "Infinite Potential", "Foundation of Reality"],
+      part: "I",
+      chapters: ["prologue", "ch_1"],
+      image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
+      timeSpan: "Before Time",
+      era: "Mythological",
+      tags: ["Nu", "Primordial", "Waters", "Creation"]
+    };
+    this.deities.set(nu.id, nu);
+
+    const kek: Deity = {
+      id: "kek",
+      name: "Kek",
+      title: "God of Shadow",
+      description: "Kek emerged as the embodiment of the primordial darkness, not as absence but as potential. His darkness was the fertile void where all things gestated before birth.",
+      domains: ["Shadow", "Darkness", "Potential", "Primordial Night"],
+      part: "I",
+      chapters: ["ch_2"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Early Creation",
+      era: "Mythological",
+      tags: ["Kek", "Shadow", "Darkness", "Potential"]
+    };
+    this.deities.set(kek.id, kek);
+
+    const heh: Deity = {
+      id: "heh",
+      name: "Heh",
+      title: "God of Infinity",
+      description: "Heh was the personification of infinity itself. Where Kek was the bounded darkness that made light meaningful, Heh was the endless expanse that gave context to all finite things.",
+      domains: ["Infinity", "Eternity", "Endless Expanse", "Cosmic Rhythm"],
+      part: "I",
+      chapters: ["ch_2"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Early Creation",
+      era: "Mythological",
+      tags: ["Heh", "Infinity", "Eternity", "Cosmos"]
+    };
+    this.deities.set(heh.id, heh);
+
+    const amun: Deity = {
+      id: "amun",
+      name: "Amun",
+      title: "The Hidden One",
+      description: "From the waters of Nu came Amun, the Hidden One – unseen, unknowable, unfathomable. He was not shadow, nor light, nor sky, nor earth – but something between.",
+      domains: ["Hidden Power", "Mystery", "Divine Kingship", "Unseen Force"],
+      part: "I",
+      chapters: ["ch_3"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Formation of Order",
+      era: "Mythological",
+      tags: ["Amun", "Hidden", "Mystery", "Divine"]
+    };
+    this.deities.set(amun.id, amun);
+
+    const mut: Deity = {
+      id: "mut",
+      name: "Mut",
+      title: "The Mother",
+      description: "Beside Amun rose Mut, the Mother, vast yet gentle, her embrace wide enough to hold worlds not yet born. Together they stood, and in their union, creation felt the stirrings of order.",
+      domains: ["Motherhood", "Protection", "Nurturing", "Divine Feminine"],
+      part: "I",
+      chapters: ["ch_3"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Formation of Order",
+      era: "Mythological",
+      tags: ["Mut", "Mother", "Protection", "Nurture"]
+    };
+    this.deities.set(mut.id, mut);
+
+    const tatenen: Deity = {
+      id: "tatenen",
+      name: "Tatenen",
+      title: "The Risen Land",
+      description: "From the deep rose a mound, a swelling of earth breaking the surface of chaos. Upon this sacred mound stood Tatenen – the risen land, the father of soil, mountains, and valleys.",
+      domains: ["Earth", "Land", "Foundation", "Sacred Mound"],
+      part: "I",
+      chapters: ["ch_4"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Formation of Earth",
+      era: "Mythological",
+      tags: ["Tatenen", "Earth", "Land", "Foundation"]
+    };
+    this.deities.set(tatenen.id, tatenen);
+
+    const khonsu: Deity = {
+      id: "khonsu",
+      name: "Khonsu",
+      title: "Timekeeper of the Moon",
+      description: "From the union of Amun and Mut, a child of silver light emerged – Khonsu, the Moon. His crown bore the lunar disk embraced by a crescent. With him, time began to move.",
+      domains: ["Moon", "Time", "Cycles", "Lunar Calendar"],
+      part: "I",
+      chapters: ["ch_5"],
+      image: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06",
+      timeSpan: "Birth of Time",
+      era: "Mythological",
+      tags: ["Khonsu", "Moon", "Time", "Cycles"]
+    };
+    this.deities.set(khonsu.id, khonsu);
+
+    // PART II – THE DIVINE BUILDERS
+    const atum: Deity = {
+      id: "atum",
+      name: "Atum",
+      title: "The First Light",
+      description: "From the heart of the deep came a spark – faint at first, then blazing with power. The waters parted, and upon the sacred mound stood Atum, the self-created, the First Light.",
+      domains: ["Self-Creation", "First Light", "Solar Power", "Divine Kingship"],
+      part: "II",
+      chapters: ["ch_6"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Dawn of Light",
+      era: "Mythological",
+      tags: ["Atum", "First Light", "Self-Creation", "Sun"]
+    };
+    this.deities.set(atum.id, atum);
+
+    const ra: Deity = {
+      id: "ra",
+      name: "Ra",
+      title: "Lord of the Sun's Journey",
+      description: "From the brilliance of Atum, a greater flame was kindled – a fire that would not fade, a beacon to rule the heavens. Thus came forth Ra, Lord of the Sun.",
+      domains: ["Sun", "Solar Journey", "Divine Rule", "Heavenly Authority"],
+      part: "II",
+      chapters: ["ch_7"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Age of Sun",
+      era: "Mythological",
+      tags: ["Ra", "Sun", "Solar Journey", "Divine Rule"]
+    };
+    this.deities.set(ra.id, ra);
+
+    const khepri: Deity = {
+      id: "khepri",
+      name: "Khepri",
+      title: "The Morning Scarab",
+      description: "At dawn, Ra wore the form of Khepri, the scarab who rolls the morning sun into being. From the eastern horizon he emerged, a beetle of shimmering gold.",
+      domains: ["Morning", "Scarab", "Renewal", "Dawn"],
+      part: "II",
+      chapters: ["ch_8"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Dawn Hours",
+      era: "Mythological",
+      tags: ["Khepri", "Morning", "Scarab", "Renewal"]
+    };
+    this.deities.set(khepri.id, khepri);
+
+    const afuRa: Deity = {
+      id: "afu_ra",
+      name: "Afu-Ra",
+      title: "The Sun in Darkness",
+      description: "In the depths of night, when Ra's barque sailed through the underworld, he took the form of Afu-Ra – the sun in darkness. This was the hidden sun that brought light even to the realm of the dead.",
+      domains: ["Underworld", "Hidden Light", "Night Journey", "Soul Guide"],
+      part: "II",
+      chapters: ["ch_9"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Nocturnal Hours",
+      era: "Mythological",
+      tags: ["Afu-Ra", "Night Sun", "Underworld", "Hidden Light"]
+    };
+    this.deities.set(afuRa.id, afuRa);
+
+    const bennu: Deity = {
+      id: "bennu",
+      name: "Bennu",
+      title: "The Eternal Phoenix",
+      description: "From the sacred flames of creation rose the Bennu bird, the eternal phoenix. In cycles of death and rebirth, it embodied the promise of renewal that runs through all Egyptian thought.",
+      domains: ["Rebirth", "Eternity", "Phoenix", "Renewal"],
+      part: "II",
+      chapters: ["ch_10"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Eternal Cycles",
+      era: "Mythological",
+      tags: ["Bennu", "Phoenix", "Renewal", "Cycles"]
+    };
+    this.deities.set(bennu.id, bennu);
+
+    // PART III – SERPENTS & SUNS
+    const sobek: Deity = {
+      id: "sobek",
+      name: "Sobek",
+      title: "Crocodile of the Nile",
+      description: "From the waters of the Nile emerged Sobek, the crocodile god. Both feared and revered, he embodied the dual nature of the river – life-giving but dangerous.",
+      domains: ["Nile", "Strength", "Protection", "Fertility"],
+      part: "III",
+      chapters: ["ch_11"],
+      image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
+      timeSpan: "River Age",
+      era: "Mythological",
+      tags: ["Sobek", "Crocodile", "Nile", "Water"]
+    };
+    this.deities.set(sobek.id, sobek);
+
+    const serket: Deity = {
+      id: "serket",
+      name: "Serket",
+      title: "The Scorpion Mother",
+      description: "Serket, the scorpion goddess, protected the innocent while punishing the wicked. Her sting could bring death or healing, depending on the justice of the cause.",
+      domains: ["Protection", "Venom", "Healing", "Scorpions"],
+      part: "III",
+      chapters: ["ch_12"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Age of Protection",
+      era: "Mythological",
+      tags: ["Serket", "Scorpion", "Protection", "Justice"]
+    };
+    this.deities.set(serket.id, serket);
+
+    const geb: Deity = {
+      id: "geb",
+      name: "Geb",
+      title: "The Earth Father",
+      description: "Geb, the earth father, lay beneath the sky goddess Nut in eternal embrace. He represents the fertile ground, the foundation of life, and the masculine principle of earth's generative power.",
+      domains: ["Earth", "Fertility", "Foundation", "Masculine Power"],
+      part: "III",
+      chapters: ["ch_13"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Cosmic Division",
+      era: "Mythological",
+      tags: ["Geb", "Earth", "Foundation", "Fertility"]
+    };
+    this.deities.set(geb.id, geb);
+
+    const nut: Deity = {
+      id: "nut",
+      name: "Nut",
+      title: "The Sky Mother",
+      description: "Nut, the sky goddess, arched over the earth in eternal longing for her lover Geb. Their separation created the space between heaven and earth where mortal life could flourish.",
+      domains: ["Sky", "Heaven", "Stars", "Feminine Power"],
+      part: "III",
+      chapters: ["ch_13"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Cosmic Division",
+      era: "Mythological",
+      tags: ["Nut", "Sky", "Heaven", "Stars"]
+    };
+    this.deities.set(nut.id, nut);
+
+    const osiris: Deity = {
+      id: "osiris",
+      name: "Osiris",
+      title: "Lord of the Green Land",
+      description: "Osiris ruled with wisdom and justice, teaching mortals the arts of civilization. His reign brought peace and prosperity, until jealousy stirred in his brother Set's heart.",
+      domains: ["Death", "Rebirth", "Justice", "Civilization"],
+      part: "III",
+      chapters: ["ch_14"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Civilization",
+      era: "Mythological",
+      tags: ["Osiris", "Death", "Rebirth", "Justice", "Civilization"]
+    };
+    this.deities.set(osiris.id, osiris);
+
+    // Additional major deities from across all parts
+    const isis: Deity = {
+      id: "isis",
+      name: "Isis",
+      title: "Great Mother and Magician",
+      description: "Isis, sister-wife of Osiris, was the most powerful magician among the gods. Her love and determination brought Osiris back from death, making her the patron of wives, mothers, and magic.",
+      domains: ["Magic", "Motherhood", "Healing", "Protection"],
+      part: "III",
+      chapters: ["ch_15"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Magic",
+      era: "Mythological",
+      tags: ["Isis", "Magic", "Mother", "Healing"]
+    };
+    this.deities.set(isis.id, isis);
+
+    const set: Deity = {
+      id: "set",
+      name: "Set",
+      title: "Lord of Chaos and Desert",
+      description: "Set, brother of Osiris, represented chaos, storms, and the harsh desert. His jealousy led to the murder of Osiris, making him the eternal enemy of order and civilization.",
+      domains: ["Chaos", "Desert", "Storms", "Conflict"],
+      part: "III",
+      chapters: ["ch_16"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Age of Conflict",
+      era: "Mythological",
+      tags: ["Set", "Chaos", "Desert", "Storm"]
+    };
+    this.deities.set(set.id, set);
+
+    const thoth: Deity = {
+      id: "thoth",
+      name: "Thoth",
+      title: "The Divine Scribe",
+      description: "Thoth, ibis-headed lord of wisdom, measured time, invented writing, and mediated disputes among the gods. In the underworld, he recorded the verdict of the weighing of hearts.",
+      domains: ["Wisdom", "Writing", "Time", "Divine Knowledge"],
+      part: "V",
+      chapters: ["ch_31"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Wisdom",
+      era: "Mythological",
+      tags: ["Thoth", "Wisdom", "Writing", "Scribe"]
+    };
+    this.deities.set(thoth.id, thoth);
+
+    const anubis: Deity = {
+      id: "anubis",
+      name: "Anubis",
+      title: "Guardian of the Dead",
+      description: "Jackal-headed Anubis embalmed Osiris and became patron of mummification. He guided souls through the necropolis and ensured their hearts were weighed justly.",
+      domains: ["Death", "Mummification", "Burial", "Soul Guidance"],
+      part: "VI",
+      chapters: ["ch_41"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Age of Death Rites",
+      era: "Mythological",
+      tags: ["Anubis", "Death", "Mummification", "Jackal"]
+    };
+    this.deities.set(anubis.id, anubis);
+
+    const horus: Deity = {
+      id: "horus",
+      name: "Horus",
+      title: "The Falcon God",
+      description: "Horus, the falcon soaring over the Nile, was the eternal symbol of kingship. As the avenger of his father Osiris, he waged war against his uncle Seth. Every Pharaoh was considered the 'Living Horus.'",
+      domains: ["Kingship", "Vengeance", "Divine Authority", "Sky"],
+      part: "VI",
+      chapters: ["ch_40"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Kingship",
+      era: "Mythological",
+      tags: ["Horus", "Falcon", "Kingship", "Sky"]
+    };
+    this.deities.set(horus.id, horus);
+
+    const maat: Deity = {
+      id: "maat",
+      name: "Ma'at",
+      title: "The Feather of Truth",
+      description: "Ma'at was not only a goddess but also the principle of truth, balance, and cosmic order. Every Pharaoh swore to uphold Ma'at. In the Hall of Judgment, hearts were weighed against her feather.",
+      domains: ["Truth", "Justice", "Cosmic Order", "Balance"],
+      part: "V",
+      chapters: ["ch_30"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Eternal Justice",
+      era: "Mythological",
+      tags: ["Maat", "Truth", "Justice", "Balance"]
+    };
+    this.deities.set(maat.id, maat);
+
+    const hathor: Deity = {
+      id: "hathor",
+      name: "Hathor",
+      title: "Goddess of Love and Joy",
+      description: "Hathor, the cow goddess, brought love, music, and joy to both gods and mortals. She was the Eye of Ra, fierce in protection yet gentle in nurturing, patron of women and celebration.",
+      domains: ["Love", "Music", "Joy", "Feminine Power"],
+      part: "IV",
+      chapters: ["ch_25"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Joy",
+      era: "Mythological",
+      tags: ["Hathor", "Love", "Music", "Joy"]
+    };
+    this.deities.set(hathor.id, hathor);
+
+    console.log(`Seeded ${this.deities.size} deities from The Weavers of Eternity`);
 
     // Seed comprehensive history events across multiple eras
     const historyEventsSeed: HistoryEvent[] = [
@@ -1018,6 +1397,43 @@ export class MemStorage implements IStorage {
       completedSessions: sessions.filter(session => session.completed).length
     };
   }
+
+  // Deity operations
+  async getAllDeities(): Promise<Deity[]> {
+    return Array.from(this.deities.values()).sort((a, b) => {
+      // Sort by part first (I, II, III, etc.), then by name
+      const partOrder = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+      const partA = partOrder.indexOf(a.part);
+      const partB = partOrder.indexOf(b.part);
+      if (partA !== partB) return partA - partB;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  async getDeity(id: string): Promise<Deity | undefined> {
+    return this.deities.get(id);
+  }
+
+  async getDeitiesByPart(part: string): Promise<Deity[]> {
+    return Array.from(this.deities.values())
+      .filter(deity => deity.part === part)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async createDeity(deity: InsertDeity): Promise<Deity> {
+    const deityObj: Deity = {
+      ...deity,
+      title: deity.title || null,
+      domains: deity.domains || [],
+      chapters: deity.chapters || [],
+      image: deity.image || null,
+      timeSpan: deity.timeSpan || null,
+      era: deity.era || null,
+      tags: deity.tags || []
+    };
+    this.deities.set(deity.id, deityObj);
+    return deityObj;
+  }
 }
 
 // PostgreSQL Storage Implementation
@@ -1230,6 +1646,34 @@ export class PostgresStorage implements IStorage {
     };
   }
 
+  // Deity operations
+  async getAllDeities(): Promise<Deity[]> {
+    const result = await this.db.select().from(deities);
+    // Sort by part first (I, II, III, etc.), then by name
+    const partOrder = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+    return result.sort((a, b) => {
+      const partA = partOrder.indexOf(a.part);
+      const partB = partOrder.indexOf(b.part);
+      if (partA !== partB) return partA - partB;
+      return a.name.localeCompare(b.name);
+    });
+  }
+
+  async getDeity(id: string): Promise<Deity | undefined> {
+    const result = await this.db.select().from(deities).where(eq(deities.id, id));
+    return result[0];
+  }
+
+  async getDeitiesByPart(part: string): Promise<Deity[]> {
+    const result = await this.db.select().from(deities).where(eq(deities.part, part));
+    return result.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  async createDeity(deity: InsertDeity): Promise<Deity> {
+    const result = await this.db.insert(deities).values(deity).returning();
+    return result[0];
+  }
+
   // Seeding function to populate database with initial data
   async seedDatabase(): Promise<void> {
     // Check if data already exists
@@ -1356,6 +1800,522 @@ Together, Amun and Mut established the pattern of hidden wisdom and manifest nur
       instructions: "Experience the cosmic balance of Kek (shadow) and Heh (infinity). Begin in darkness, acknowledging the shadows within and around you. Then expand your awareness to touch infinity - the endless expanse of time and space. Feel how darkness gives meaning to light, and how infinity gives context to the finite moment.",
       origin: "Inspired by Kek and Heh from The Weavers of Eternity",
       tags: ["Kek", "Heh", "Balance", "Shadow", "Infinity"]
+    });
+
+    // Seed comprehensive deities from "The Weavers of Eternity: A Chronicle of the Egyptian Gods"
+    // Complete coverage of Parts I-VII with canonical data from the seeded chapters
+    
+    // PART I – THE FIRST BREATH (from seeded chapters: prologue, ch_1-ch_5)
+    this.createDeity({
+      id: "nu",
+      name: "Nu",
+      title: "The Primordial Waters",
+      description: "Nu was the boundless chaos from which creation emerged. He was not worshipped with temples but acknowledged as the eternal ocean underlying existence. Nu represents both chaos and potential—a reminder of the cosmos' fragile order sustained by the gods.",
+      domains: ["Primordial Waters", "Chaos", "Creation", "Eternal Ocean"],
+      part: "I",
+      chapters: ["prologue", "ch_1"],
+      image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
+      timeSpan: "Before Time",
+      era: "Mythological",
+      tags: ["Creation", "Nu", "Primordial Waters", "Beginning"]
+    });
+
+    this.createDeity({
+      id: "kek",
+      name: "Kek",
+      title: "God of Darkness",
+      description: "Kek, the god of shadow, was cloaked in eternal dusk that lingers before dawn. He represents the veil, the silence before the cry, and provides the necessary darkness that gives light meaning and offers rest to order.",
+      domains: ["Darkness", "Shadow", "Night", "Balance"],
+      part: "I",
+      chapters: ["ch_2"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Early Creation",
+      era: "Mythological",
+      tags: ["Kek", "Shadow", "Darkness", "Balance"]
+    });
+
+    this.createDeity({
+      id: "heh",
+      name: "Heh",
+      title: "God of Infinity",
+      description: "Heh, the god of infinity, stretched in every direction without boundary. He multiplies time and grants it no end, representing the forever upon which the fleeting stands.",
+      domains: ["Infinity", "Time", "Eternity", "Endless Expanse"],
+      part: "I",
+      chapters: ["ch_2"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Early Creation",
+      era: "Mythological",
+      tags: ["Heh", "Infinity", "Eternity", "Time"]
+    });
+
+    this.createDeity({
+      id: "amun",
+      name: "Amun",
+      title: "The Hidden One",
+      description: "Amun, the Hidden One, was the mysterious and unknowable presence that slips through grasp and gaze. He was the unseen force that moves through what is, what was, and what will be. His true form cannot be named, for it is in being hidden that he endures.",
+      domains: ["Mystery", "Hidden Force", "The Unknown", "Divine Concealment"],
+      part: "I",
+      chapters: ["ch_3"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Formation of Order",
+      era: "Mythological",
+      tags: ["Amun", "Hidden One", "Mystery"]
+    });
+
+    this.createDeity({
+      id: "mut",
+      name: "Mut",
+      title: "The Great Mother",
+      description: "Mut, the Great Mother, was vast yet gentle, her presence radiant and her embrace wide enough to hold worlds not yet born. She wears the double plumes of majesty and her eyes shine with the promise of nurture.",
+      domains: ["Motherhood", "Nurture", "Protection", "Divine Majesty"],
+      part: "I",
+      chapters: ["ch_3"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Formation of Order",
+      era: "Mythological",
+      tags: ["Mut", "Great Mother", "Nurture", "Protection"]
+    });
+
+    this.createDeity({
+      id: "tatenen",
+      name: "Tatenen",
+      title: "The Risen Land",
+      description: "Tatenen, the rising earth, emerged from the primordial waters to form the first land. He represents the physical manifestation of creation, the solid ground upon which life can flourish.",
+      domains: ["Earth", "Land", "Foundation", "Physical Creation"],
+      part: "I",
+      chapters: ["ch_4"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Formation of Earth",
+      era: "Mythological",
+      tags: ["Tatenen", "Earth", "Land", "Foundation"]
+    });
+
+    this.createDeity({
+      id: "khonsu",
+      name: "Khonsu",
+      title: "Timekeeper of the Moon",
+      description: "Khonsu, the divine timekeeper, is the youthful god who marks the passage of time and governs the cycles of the moon. He brings order to temporal existence and guides the rhythm of cosmic cycles.",
+      domains: ["Time", "Moon", "Cycles", "Youth"],
+      part: "I",
+      chapters: ["ch_5"],
+      image: "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06",
+      timeSpan: "Birth of Time",
+      era: "Mythological",
+      tags: ["Khonsu", "Moon", "Time", "Cycles"]
+    });
+
+    // PART II – THE DIVINE BUILDERS (from seeded chapters: ch_6-ch_10 + missing deities)
+    this.createDeity({
+      id: "atum",
+      name: "Atum",
+      title: "The First Light",
+      description: "Atum, the self-created god, arose from Nun and generated the first divine pair. Often depicted as both male and female, he embodied totality and represents the Egyptian idea of self-generation and cyclical creation.",
+      domains: ["First Light", "Self-Creation", "Totality", "Beginning"],
+      part: "II",
+      chapters: ["ch_6"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Dawn of Light",
+      era: "Mythological",
+      tags: ["Atum", "First Light", "Self-Creation"]
+    });
+
+    this.createDeity({
+      id: "ra",
+      name: "Ra",
+      title: "The Solar King",
+      description: "Ra, the great sun god, sailed daily across the heavens and nightly through the underworld. Each dawn was a triumph over Apophis, the serpent of chaos. Pharaohs styled themselves as 'sons of Ra,' inheritors of his divine light.",
+      domains: ["Sun", "Kingship", "Divine Light", "Cosmic Order"],
+      part: "II",
+      chapters: ["ch_7"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Age of Sun",
+      era: "Mythological",
+      tags: ["Ra", "Sun", "Solar Journey", "Divine Rule"]
+    });
+
+    this.createDeity({
+      id: "khepri",
+      name: "Khepri",
+      title: "The Morning Scarab",
+      description: "Khepri, the scarab who rolls the morning sun into being, represents renewal and rebirth. Each dawn is his triumph, each sunrise his rebirth. He is the promise that no darkness endures forever.",
+      domains: ["Dawn", "Renewal", "Rebirth", "Morning Sun"],
+      part: "II",
+      chapters: ["ch_8"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Dawn Hours",
+      era: "Mythological",
+      tags: ["Khepri", "Morning", "Scarab", "Renewal"]
+    });
+
+    this.createDeity({
+      id: "afu_ra",
+      name: "Afu-Ra",
+      title: "The Sun in Darkness",
+      description: "Afu-Ra, the Hidden Sun, sails through the Duat—the realm of night and the dead. His light no longer blazes in glory but glows like embers, guiding souls and warding off chaos in eternal darkness.",
+      domains: ["Underworld", "Hidden Light", "Night Journey", "Soul Guide"],
+      part: "II",
+      chapters: ["ch_9"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Nocturnal Hours",
+      era: "Mythological",
+      tags: ["Afu-Ra", "Night Sun", "Underworld", "Hidden Light"]
+    });
+
+    this.createDeity({
+      id: "bennu",
+      name: "Bennu",
+      title: "The Eternal Phoenix",
+      description: "Bennu, the eternal phoenix, is the soul of Ra and the spirit of rebirth itself. With feathers of crimson and gold, he is the living symbol of eternity—the assurance that all things die only to rise again.",
+      domains: ["Rebirth", "Eternity", "Phoenix", "Renewal"],
+      part: "II",
+      chapters: ["ch_10"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Eternal Cycles",
+      era: "Mythological",
+      tags: ["Bennu", "Phoenix", "Renewal", "Cycles"]
+    });
+
+    // Missing deities from Part II: Khnum, Neith, Imentet, Aqen, Renenutet
+    this.createDeity({
+      id: "khnum",
+      name: "Khnum",
+      title: "The Potter of Souls",
+      description: "Khnum, the ram-headed potter god, shapes souls on his divine wheel before birth. He forms both body and ka (spiritual double) from clay, determining destiny and character. His workshop lies beside the Nile's first cataract.",
+      domains: ["Creation", "Pottery", "Souls", "Destiny"],
+      part: "II",
+      chapters: ["ch_15"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Creation",
+      era: "Mythological",
+      tags: ["Khnum", "Potter", "Creation", "Souls"]
+    });
+
+    this.createDeity({
+      id: "neith",
+      name: "Neith",
+      title: "Weaver of Fate",
+      description: "Neith, the ancient weaver goddess, spins the threads of destiny on her cosmic loom. She is both creator and destroyer, her arrows bringing swift death while her weaving brings life into being.",
+      domains: ["Fate", "Weaving", "War", "Creation"],
+      part: "II",
+      chapters: ["ch_16"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Ancient Times",
+      era: "Mythological",
+      tags: ["Neith", "Weaver", "Fate", "Destiny"]
+    });
+
+    // PART III – SERPENTS & SUNS (from seeded chapters: ch_11-ch_14 + missing deities)
+    this.createDeity({
+      id: "sobek",
+      name: "Sobek",
+      title: "Crocodile of the Nile",
+      description: "Sobek, the crocodile god, embodied the dangers and fertility of the Nile. Both feared and revered, he was invoked for strength and protection, revealing Egyptian ambivalence toward the life-giving yet dangerous river.",
+      domains: ["Nile", "Strength", "Protection", "Fertility"],
+      part: "III",
+      chapters: ["ch_11"],
+      image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
+      timeSpan: "River Age",
+      era: "Mythological",
+      tags: ["Sobek", "Crocodile", "Nile", "Water"]
+    });
+
+    this.createDeity({
+      id: "serket",
+      name: "Serket",
+      title: "The Scorpion Mother",
+      description: "Serket, the scorpion goddess, was protector against venomous creatures and guardian of the dead. Her deadly sting could both kill and heal, embodying the dual nature of protection and danger.",
+      domains: ["Protection", "Venom", "Healing", "Scorpions"],
+      part: "III",
+      chapters: ["ch_12"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Age of Protection",
+      era: "Mythological",
+      tags: ["Serket", "Scorpion", "Protection", "Justice"]
+    });
+
+    this.createDeity({
+      id: "geb",
+      name: "Geb",
+      title: "The Earth Father",
+      description: "Geb, the earth god, lay beneath the sky goddess Nut in eternal embrace. He represents the fertile ground, the foundation of life, and the masculine principle of earth's generative power.",
+      domains: ["Earth", "Fertility", "Foundation", "Masculine Power"],
+      part: "III",
+      chapters: ["ch_13"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Cosmic Division",
+      era: "Mythological",
+      tags: ["Geb", "Earth", "Fertility", "Foundation"]
+    });
+
+    this.createDeity({
+      id: "nut",
+      name: "Nut",
+      title: "The Sky Mother",
+      description: "Nut, the sky goddess, arched over Geb in eternal protection. Her star-covered body formed the heavens, and she swallowed the sun each evening only to give birth to it each dawn.",
+      domains: ["Sky", "Stars", "Heaven", "Celestial Mother"],
+      part: "III",
+      chapters: ["ch_13"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Cosmic Division",
+      era: "Mythological",
+      tags: ["Nut", "Sky", "Stars", "Heaven"]
+    });
+
+    this.createDeity({
+      id: "osiris",
+      name: "Osiris",
+      title: "Lord of the Afterlife",
+      description: "Osiris ruled as the first king of Egypt until betrayed by his brother Seth. Dismembered and scattered, he was restored by Isis and became lord of the dead, granting immortality to those judged righteous.",
+      domains: ["Afterlife", "Death", "Resurrection", "Judgment"],
+      part: "III",
+      chapters: ["ch_14"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Civilization",
+      era: "Mythological",
+      tags: ["Osiris", "Death", "Rebirth", "Justice", "Civilization"]
+    });
+
+    // Missing key deities from Part III
+    this.createDeity({
+      id: "isis",
+      name: "Isis",
+      title: "The Throne of Magic",
+      description: "Isis was both healer and sorceress, mother and queen. Her devotion to Osiris after his murder exemplified the power of love and magic to overcome death. Her worship spread far beyond Egypt, reaching Rome.",
+      domains: ["Magic", "Motherhood", "Healing", "Divine Love"],
+      part: "III",
+      chapters: ["ch_17"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Magic",
+      era: "Mythological",
+      tags: ["Isis", "Magic", "Healing", "Motherhood"]
+    });
+
+    this.createDeity({
+      id: "set",
+      name: "Set",
+      title: "Lord of Storm and Chaos",
+      description: "Set, the desert storm, was both protector and betrayer. He defended Ra's solar barque against Apophis but murdered his brother Osiris. His composite animal form reflected his role as necessary disruptor.",
+      domains: ["Chaos", "Desert", "Storm", "Necessary Discord"],
+      part: "III",
+      chapters: ["ch_18"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Age of Conflict",
+      era: "Mythological",
+      tags: ["Set", "Chaos", "Storm", "Desert"]
+    });
+
+    this.createDeity({
+      id: "apophis",
+      name: "Apophis",
+      title: "The Eternal Enemy",
+      description: "Apophis, the serpent of darkness, sought to swallow the sun and plunge creation into night. He is pure entropy—he cannot be destroyed, only resisted. His myth explains why cosmic vigilance is eternal.",
+      domains: ["Chaos", "Darkness", "Entropy", "Eternal Opposition"],
+      part: "III",
+      chapters: ["ch_19"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Eternal Conflict",
+      era: "Mythological",
+      tags: ["Apophis", "Chaos", "Serpent", "Eternal Enemy"]
+    });
+
+    // PART IV – THE BALANCE OF POWER (Missing deities)
+    this.createDeity({
+      id: "ptah",
+      name: "Ptah",
+      title: "The Creator by Thought",
+      description: "Ptah, the craftsman god of Memphis, was said to create through thought and speech alone. He was patron of artisans and builders, embodying creativity as divine power.",
+      domains: ["Creation", "Craftsmanship", "Thought", "Building"],
+      part: "IV",
+      chapters: ["ch_20"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Craftsmanship",
+      era: "Mythological",
+      tags: ["Ptah", "Creation", "Craftsmanship", "Memphis"]
+    });
+
+    this.createDeity({
+      id: "sekhmet",
+      name: "Sekhmet",
+      title: "The Lioness of War",
+      description: "Sekhmet, lioness-headed goddess of war and healing, breathes fire and brings plagues but also cures disease. Her rage nearly destroyed humanity until Ra stopped her with red beer she mistook for blood.",
+      domains: ["War", "Healing", "Plague", "Divine Fury"],
+      part: "IV",
+      chapters: ["ch_21"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of War",
+      era: "Mythological",
+      tags: ["Sekhmet", "War", "Lioness", "Healing"]
+    });
+
+    this.createDeity({
+      id: "hathor",
+      name: "Hathor",
+      title: "The Lady of Joy",
+      description: "Hathor, depicted as a cow or woman with cow horns and solar disk, was goddess of love, music, and motherhood. She welcomed the dead into the afterlife and was worshipped as protector of women.",
+      domains: ["Love", "Music", "Motherhood", "Joy"],
+      part: "IV",
+      chapters: ["ch_22"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Joy",
+      era: "Mythological",
+      tags: ["Hathor", "Love", "Music", "Joy"]
+    });
+
+    this.createDeity({
+      id: "shu",
+      name: "Shu",
+      title: "Breath of Air",
+      description: "Shu, god of air and atmosphere, separates earth from sky by supporting Nut above Geb. He is the breath of life itself, bringing the wind that carries Ra's solar barque across the heavens.",
+      domains: ["Air", "Wind", "Separation", "Breath"],
+      part: "IV",
+      chapters: ["ch_23"],
+      image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+      timeSpan: "Age of Elements",
+      era: "Mythological",
+      tags: ["Shu", "Air", "Wind", "Breath"]
+    });
+
+    this.createDeity({
+      id: "tefnut",
+      name: "Tefnut",
+      title: "Moisture and Balance",
+      description: "Tefnut, lioness-headed goddess of moisture and rain, brings life-giving water to the desert. Sister-wife to Shu, she maintains cosmic balance through the eternal cycle of dryness and wetness.",
+      domains: ["Moisture", "Rain", "Balance", "Lioness"],
+      part: "IV",
+      chapters: ["ch_24"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Elements",
+      era: "Mythological",
+      tags: ["Tefnut", "Moisture", "Rain", "Balance"]
+    });
+
+    this.createDeity({
+      id: "bastet",
+      name: "Bastet",
+      title: "Gentle Protector, Fierce Huntress",
+      description: "Bastet, the cat goddess, protects homes and families from evil spirits and disease. By day a gentle domestic cat, by night a fierce lioness hunting demons in the darkness.",
+      domains: ["Protection", "Cats", "Home", "Fierce Love"],
+      part: "IV",
+      chapters: ["ch_25"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Protection",
+      era: "Mythological",
+      tags: ["Bastet", "Cats", "Protection", "Home"]
+    });
+
+    // PART V – THE ETERNAL COURT (Missing deities)
+    this.createDeity({
+      id: "maat",
+      name: "Ma'at",
+      title: "The Feather of Truth",
+      description: "Ma'at was not only a goddess but also the principle of truth, balance, and cosmic order. Every Pharaoh swore to uphold Ma'at. In the Hall of Judgment, hearts were weighed against her feather.",
+      domains: ["Truth", "Justice", "Cosmic Order", "Balance"],
+      part: "V",
+      chapters: ["ch_30"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Eternal Justice",
+      era: "Mythological",
+      tags: ["Maat", "Truth", "Justice", "Balance"]
+    });
+
+    this.createDeity({
+      id: "thoth",
+      name: "Thoth",
+      title: "The Divine Scribe",
+      description: "Thoth, ibis-headed lord of wisdom, measured time, invented writing, and mediated disputes among the gods. In the underworld, he recorded the verdict of the weighing of hearts.",
+      domains: ["Wisdom", "Writing", "Time", "Divine Knowledge"],
+      part: "V",
+      chapters: ["ch_31"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Wisdom",
+      era: "Mythological",
+      tags: ["Thoth", "Wisdom", "Writing", "Scribe"]
+    });
+
+    this.createDeity({
+      id: "hapi",
+      name: "Hapi",
+      title: "Spirit of the Nile's Floods",
+      description: "Hapi, the blue-skinned god of the Nile flood, brings the annual inundation that makes Egypt fertile. He is depicted with female breasts showing his nurturing nature, crowned with papyrus and lotus.",
+      domains: ["Nile Floods", "Fertility", "Abundance", "Annual Renewal"],
+      part: "V",
+      chapters: ["ch_32"],
+      image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000",
+      timeSpan: "Seasonal Cycles",
+      era: "Mythological",
+      tags: ["Hapi", "Nile", "Floods", "Fertility"]
+    });
+
+    // PART VI – DEATH AND REBIRTH (Missing deities)
+    this.createDeity({
+      id: "horus",
+      name: "Horus",
+      title: "The Falcon God",
+      description: "Horus, the falcon soaring over the Nile, was the eternal symbol of kingship. As the avenger of his father Osiris, he waged war against his uncle Seth. Every Pharaoh was considered the 'Living Horus.'",
+      domains: ["Kingship", "Vengeance", "Divine Authority", "Sky"],
+      part: "VI",
+      chapters: ["ch_40"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Kingship",
+      era: "Mythological",
+      tags: ["Horus", "Falcon", "Kingship", "Sky"]
+    });
+
+    this.createDeity({
+      id: "anubis",
+      name: "Anubis",
+      title: "Guardian of the Dead",
+      description: "Jackal-headed Anubis embalmed Osiris and became patron of mummification. He guided souls through the necropolis and ensured their hearts were weighed justly.",
+      domains: ["Death", "Mummification", "Burial", "Soul Guidance"],
+      part: "VI",
+      chapters: ["ch_41"],
+      image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+      timeSpan: "Age of Death Rites",
+      era: "Mythological",
+      tags: ["Anubis", "Death", "Mummification", "Jackal"]
+    });
+
+    this.createDeity({
+      id: "nephthys",
+      name: "Nephthys",
+      title: "Lady of Mourning",
+      description: "Nephthys, sister of Isis and wife of Set, is the goddess who mourns the dead and guards the canopic jars. She assisted Isis in gathering Osiris's scattered pieces and protects the deceased in their journey.",
+      domains: ["Mourning", "Death", "Protection", "Lamentation"],
+      part: "VI",
+      chapters: ["ch_42"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Mourning",
+      era: "Mythological",
+      tags: ["Nephthys", "Mourning", "Death", "Protection"]
+    });
+
+    // PART VII – THE FLAMES OF WAR (Missing deities)
+    this.createDeity({
+      id: "montu",
+      name: "Montu",
+      title: "God of War's Rage",
+      description: "Montu, the falcon-headed war god of Thebes, leads pharaohs in battle with his fierce war cry. His strength in combat is legendary, and his bull-headed sacred animal embodies unstoppable force.",
+      domains: ["War", "Battle", "Strength", "Military Victory"],
+      part: "VII",
+      chapters: ["ch_50"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of War",
+      era: "Mythological",
+      tags: ["Montu", "War", "Battle", "Thebes"]
+    });
+
+    this.createDeity({
+      id: "satis",
+      name: "Satis",
+      title: "Arrow of the Nile's Source",
+      description: "Satis, the archer goddess of the Nile's first cataract, guards Egypt's southern border. Her arrows are swift and sure, and she purifies the souls of the dead with sacred Nile water.",
+      domains: ["Archery", "Nile Source", "Border Protection", "Purification"],
+      part: "VII",
+      chapters: ["ch_51"],
+      image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96",
+      timeSpan: "Age of Borders",
+      era: "Mythological",
+      tags: ["Satis", "Archery", "Nile", "Protection"]
     });
 
     console.log("Database seeding completed!");

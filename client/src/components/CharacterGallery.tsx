@@ -6,145 +6,94 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X, BookOpen, Eye } from "lucide-react";
-import type { BookChapter } from "@shared/schema";
+import { Separator } from "@/components/ui/separator";
+import { Search, X, BookOpen, Eye, Crown, Sparkles } from "lucide-react";
+import type { Deity } from "@shared/schema";
 
 interface CharacterGalleryProps {
   onClose: () => void;
 }
 
-interface Character {
-  name: string;
-  description: string;
-  chapters: string[];
-  domains: string[];
-  image?: string;
-}
+const partTitles: Record<string, string> = {
+  "I": "The First Breath",
+  "II": "The Divine Builders", 
+  "III": "Serpents & Suns",
+  "IV": "The Balance of Power",
+  "V": "The Eternal Court",
+  "VI": "Death and Rebirth",
+  "VII": "The Flames of War"
+};
+
+const partDescriptions: Record<string, string> = {
+  "I": "The primordial forces that first emerged from chaos to establish order",
+  "II": "The creative deities who shaped the cosmos and built divine civilization",
+  "III": "The powers of nature, the eternal struggle between order and chaos",
+  "IV": "The gods who maintain cosmic balance and govern earthly affairs",
+  "V": "The divine court that rules over wisdom, justice, and eternal principles",
+  "VI": "The mysteries of death, rebirth, and the journey to the afterlife",
+  "VII": "The warrior gods who defend cosmic order through divine conflict"
+};
 
 export default function CharacterGallery({ onClose }: CharacterGalleryProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [selectedDeity, setSelectedDeity] = useState<Deity | null>(null);
 
-  const { data: chapters, isLoading } = useQuery<BookChapter[]>({
-    queryKey: ["/api/chapters"]
+  // Fetch all deities from the API
+  const { data: deities = [], isLoading } = useQuery<Deity[]>({
+    queryKey: ["/api/deities"]
   });
 
-  // Extract characters from the book chapters aligned with semi-academic retelling format
-  const extractCharacters = (chapters: BookChapter[]): Character[] => {
-    const characters: Character[] = [
-      {
-        name: "Nu – The Primordial Waters",
-        description: "Nu was the boundless chaos from which creation emerged. He was not worshipped with temples but acknowledged as the eternal ocean underlying existence. Nu represents both chaos and potential—a reminder of the cosmos' fragile order sustained by the gods.",
-        chapters: ["prologue", "ch_59"],
-        domains: ["Primordial Waters", "Chaos", "Creation", "Eternal Ocean"],
-        image: "https://images.unsplash.com/photo-1439066615861-d1af74d74000"
-      },
-      {
-        name: "Ra – The Solar King",
-        description: "Ra, the great sun god, sailed daily across the heavens and nightly through the underworld. Each dawn was a triumph over Apophis, the serpent of chaos. Pharaohs styled themselves as 'sons of Ra,' inheritors of his divine light. Ra's cycle reflected Egyptian cosmology: life was a struggle of order against chaos, repeated every day, ensuring cosmic stability.",
-        chapters: ["ch_61"],
-        domains: ["Sun", "Kingship", "Divine Light", "Cosmic Order"],
-        image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
-      },
-      {
-        name: "Horus – The Falcon God of Kingship",
-        description: "Horus, the falcon soaring over the Nile, was the eternal symbol of kingship. As the avenger of his father Osiris, he waged long war against his uncle Seth, the god of chaos. Every Pharaoh thereafter was considered the 'Living Horus,' an embodiment of divine authority.",
-        chapters: ["ch_41"],
-        domains: ["Kingship", "Vengeance", "Divine Authority", "Sky"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      },
-      {
-        name: "Isis – The Great Mother",
-        description: "Isis was both healer and sorceress, mother and queen. Her devotion to Osiris after his murder exemplified the power of love and magic to overcome death. She restored Osiris to life long enough to conceive Horus, thus ensuring the continuation of kingship. Her worship spread far beyond Egypt, reaching Rome.",
-        chapters: ["ch_42"],
-        domains: ["Magic", "Motherhood", "Healing", "Divine Love"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      },
-      {
-        name: "Osiris – The Lord of the Afterlife",
-        description: "Osiris ruled as the first king of Egypt until betrayed by his brother Seth. Dismembered and scattered, he was restored by Isis and embalmed by Anubis. From then on, he reigned not over the living but over the dead, granting immortality to those judged righteous. Osiris symbolizes renewal and the agricultural cycle.",
-        chapters: ["ch_43"],
-        domains: ["Afterlife", "Death", "Resurrection", "Judgment"],
-        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
-      },
-      {
-        name: "Seth – The Lord of Chaos",
-        description: "Seth, the desert storm, was both protector and betrayer. He defended Ra's solar barque against the serpent Apophis but murdered his own brother Osiris. His strange, composite animal form reflected his role as outsider and necessary disruptor. Seth embodies the duality of chaos: destructive yet at times essential.",
-        chapters: ["ch_44"],
-        domains: ["Chaos", "Desert", "Storm", "Necessary Discord"],
-        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
-      },
-      {
-        name: "Ma'at – The Feather of Truth",
-        description: "Ma'at was not only a goddess but also the principle of truth, balance, and cosmic order. Every Pharaoh swore to uphold Ma'at. In the Hall of Judgment, the hearts of the dead were weighed against her feather. Ma'at was central to Egyptian religion and society.",
-        chapters: ["ch_46"],
-        domains: ["Truth", "Justice", "Cosmic Order", "Balance"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      },
-      {
-        name: "Thoth – The Divine Scribe",
-        description: "Thoth, ibis-headed lord of wisdom, measured time, invented writing, and mediated disputes among the gods. In the underworld, he recorded the verdict of the weighing of hearts. Thoth symbolizes intellect and order, essential to law, astronomy, and writing—cornerstones of Egyptian civilization.",
-        chapters: ["ch_63"],
-        domains: ["Wisdom", "Writing", "Time", "Divine Knowledge"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      },
-      {
-        name: "Anubis – Guardian of the Dead",
-        description: "Jackal-headed Anubis embalmed Osiris and became patron of mummification. He guided souls through the necropolis and ensured their hearts were weighed justly. Anubis reflects the Egyptian concern with proper burial and assured people that death could be navigated safely.",
-        chapters: ["ch_64"],
-        domains: ["Death", "Mummification", "Burial", "Soul Guidance"],
-        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
-      },
-      {
-        name: "Khonsu – The Moon Wanderer",
-        description: "Khonsu, god of the moon, traveled nightly across the sky. Known as a healer, his name means 'traveler.' Myths depict him gambling away time to Thoth, explaining the extra days added to the calendar. Khonsu connects lunar cycles with healing, timekeeping, and fertility.",
-        chapters: ["ch_50"],
-        domains: ["Moon", "Healing", "Time", "Travel"],
-        image: "https://images.unsplash.com/photo-1502134249126-9f3755a50d78"
-      },
-      {
-        name: "Amun – The Hidden One",
-        description: "Amun began as a local Theban god but rose to prominence as 'Amun-Ra,' king of the gods. Invisible and mysterious, he was considered the unseen force behind existence. The political rise of Thebes paralleled the rise of Amun, showing how theology followed history.",
-        chapters: ["ch_52"],
-        domains: ["Mystery", "Hidden Power", "Kingship", "Thebes"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      },
-      {
-        name: "Mut – The Mother Goddess",
-        description: "Mut, consort of Amun, was depicted as a vulture goddess, motherly yet regal. She represented protection and sovereignty. Mut's role underscores the maternal dimension of kingship: the Pharaoh was 'son of Mut,' nurtured by divine motherhood.",
-        chapters: ["ch_53"],
-        domains: ["Motherhood", "Protection", "Sovereignty", "Royal Nurture"],
-        image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96"
-      }
-    ];
+  // Group deities by part for organized display
+  const deitiesByPart = deities.reduce((acc, deity) => {
+    const part = deity.part;
+    if (!acc[part]) {
+      acc[part] = [];
+    }
+    acc[part].push(deity);
+    return acc;
+  }, {} as Record<string, Deity[]>);
 
-    return characters;
-  };
-
-  const characters = chapters ? extractCharacters(chapters) : [];
-
-  const filteredCharacters = characters.filter(character =>
-    character.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    character.domains.some(domain => domain.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Filter deities based on search term
+  const filteredDeities = deities.filter(deity =>
+    deity.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    deity.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (deity.domains as string[]).some(domain => 
+      domain.toLowerCase().includes(searchTerm.toLowerCase())
+    ) ||
+    (deity.tags as string[]).some(tag => 
+      tag.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
-  const getChapterTitle = (chapterId: string): string => {
-    const chapter = chapters?.find(ch => ch.id === chapterId);
-    return chapter?.title || chapterId;
-  };
+  // Group filtered deities by part
+  const filteredDeitiesByPart = filteredDeities.reduce((acc, deity) => {
+    const part = deity.part;
+    if (!acc[part]) {
+      acc[part] = [];
+    }
+    acc[part].push(deity);
+    return acc;
+  }, {} as Record<string, Deity[]>);
+
+  const parts = ["I", "II", "III", "IV", "V", "VI", "VII"];
+  const displayParts = searchTerm ? 
+    parts.filter(part => filteredDeitiesByPart[part]?.length > 0) : 
+    parts.filter(part => deitiesByPart[part]?.length > 0);
 
   if (isLoading) {
     return (
-      <Dialog open={true} onOpenChange={onClose}>
-        <DialogContent className="max-w-6xl h-[80vh]">
+      <Dialog open onOpenChange={() => onClose()}>
+        <DialogContent className="max-w-6xl h-[80vh] bg-white dark:bg-gray-900">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <Eye className="w-6 h-6" />
+            <DialogTitle className="text-2xl font-bold text-amber-800 dark:text-amber-400">
               Character Gallery
             </DialogTitle>
           </DialogHeader>
           <div className="flex items-center justify-center h-full">
-            <div className="text-lg text-muted-foreground">Loading characters...</div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-300">Loading the pantheon...</p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -152,161 +101,272 @@ export default function CharacterGallery({ onClose }: CharacterGalleryProps) {
   }
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-6xl h-[80vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <Eye className="w-6 h-6" />
-            Character Gallery - Egyptian Gods & Divine Beings
-          </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="absolute right-4 top-4"
-            data-testid="button-close-gallery"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search characters or domains..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-              data-testid="input-character-search"
-            />
-          </div>
-
-          <ScrollArea className="h-[60vh]">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-              {filteredCharacters.map((character) => (
-                <Card 
-                  key={character.name} 
-                  className="cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => setSelectedCharacter(character)}
-                  data-testid={`card-character-${character.name.toLowerCase()}`}
-                >
-                  <CardHeader>
-                    <div className="relative h-32 mb-4 overflow-hidden rounded-lg">
-                      <img
-                        src={character.image}
-                        alt={character.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1578662996442-48f60103fc96";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                      <CardTitle className="absolute bottom-2 left-2 text-white text-lg">
-                        {character.name}
-                      </CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {character.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {character.domains.slice(0, 2).map(domain => (
-                        <Badge key={domain} variant="secondary" className="text-xs">
-                          {domain}
-                        </Badge>
-                      ))}
-                      {character.domains.length > 2 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{character.domains.length - 2} more
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <BookOpen className="w-3 h-3" />
-                      {character.chapters.length} chapter{character.chapters.length !== 1 ? 's' : ''}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+    <>
+      <Dialog open onOpenChange={() => onClose()}>
+        <DialogContent className="max-w-6xl h-[80vh] bg-white dark:bg-gray-900">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-amber-800 dark:text-amber-400 flex items-center gap-2">
+              <Crown className="h-6 w-6" />
+              The Weavers of Eternity: Character Gallery
+            </DialogTitle>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">
+              Explore the complete pantheon from Parts I-VII of the Egyptian Chronicles
+            </p>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-4 h-full">
+            {/* Search Input */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                data-testid="input-search-deities"
+                placeholder="Search deities by name, domains, or attributes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 border-amber-200 focus:border-amber-400 focus:ring-amber-400"
+              />
             </div>
 
-            {filteredCharacters.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                <Eye className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>No characters found matching your search.</p>
-              </div>
-            )}
-          </ScrollArea>
-        </div>
+            {/* Results Count */}
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              {searchTerm ? (
+                <span>Found {filteredDeities.length} deities matching "{searchTerm}"</span>
+              ) : (
+                <span>Displaying {deities.length} deities across {displayParts.length} parts</span>
+              )}
+            </div>
 
-        {/* Character Detail Modal */}
-        {selectedCharacter && (
-          <Dialog open={!!selectedCharacter} onOpenChange={() => setSelectedCharacter(null)}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full overflow-hidden">
-                    <img
-                      src={selectedCharacter.image}
-                      alt={selectedCharacter.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1578662996442-48f60103fc96";
-                      }}
-                    />
+            {/* Deities Grid organized by Parts */}
+            <ScrollArea className="flex-1 pr-4">
+              <div className="space-y-8">
+                {displayParts.map((part) => {
+                  const partDeities = searchTerm ? filteredDeitiesByPart[part] || [] : deitiesByPart[part] || [];
+                  
+                  if (partDeities.length === 0) return null;
+
+                  return (
+                    <div key={part} className="space-y-4">
+                      {/* Part Header */}
+                      <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 p-6 rounded-lg border border-amber-200 dark:border-amber-800">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Sparkles className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                          <h3 className="text-xl font-bold text-amber-800 dark:text-amber-300">
+                            Part {part}: {partTitles[part]}
+                          </h3>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300 text-sm">
+                          {partDescriptions[part]}
+                        </p>
+                        <div className="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                          {partDeities.length} {partDeities.length === 1 ? 'deity' : 'deities'}
+                        </div>
+                      </div>
+
+                      {/* Deities Grid for this Part */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {partDeities.map((deity) => (
+                          <Card 
+                            key={deity.id} 
+                            className="cursor-pointer hover:shadow-lg transition-all duration-200 border-amber-100 dark:border-amber-800 hover:border-amber-300 dark:hover:border-amber-600"
+                            onClick={() => setSelectedDeity(deity)}
+                            data-testid={`card-deity-${deity.id}`}
+                          >
+                            <CardHeader className="pb-2">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <CardTitle className="text-lg text-amber-800 dark:text-amber-300 leading-tight">
+                                    {deity.name}
+                                  </CardTitle>
+                                  {deity.title && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 italic">
+                                      {deity.title}
+                                    </p>
+                                  )}
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-amber-600 hover:text-amber-800 hover:bg-amber-50"
+                                  data-testid={`button-view-${deity.id}`}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-3">
+                                {/* Description Preview */}
+                                <p 
+                                  className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3" 
+                                  data-testid={`text-description-${deity.id}`}
+                                >
+                                  {deity.description}
+                                </p>
+
+                                {/* Domains */}
+                                <div className="flex flex-wrap gap-1">
+                                  {(deity.domains as string[]).slice(0, 3).map((domain, index) => (
+                                    <Badge 
+                                      key={index} 
+                                      variant="secondary" 
+                                      className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                                      data-testid={`badge-domain-${deity.id}-${index}`}
+                                    >
+                                      {domain}
+                                    </Badge>
+                                  ))}
+                                  {(deity.domains as string[]).length > 3 && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className="text-xs text-gray-500"
+                                    >
+                                      +{(deity.domains as string[]).length - 3} more
+                                    </Badge>
+                                  )}
+                                </div>
+
+                                {/* Chapter References */}
+                                <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                                  <BookOpen className="h-3 w-3" />
+                                  <span data-testid={`text-chapters-${deity.id}`}>
+                                    {(deity.chapters as string[]).length} chapter{(deity.chapters as string[]).length !== 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {displayParts.length === 0 && (
+                  <div className="text-center py-12">
+                    <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400">
+                      No deities found matching your search criteria.
+                    </p>
                   </div>
-                  {selectedCharacter.name}
-                </DialogTitle>
-              </DialogHeader>
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-              <div className="space-y-4">
-                <div className="relative h-48 overflow-hidden rounded-lg">
-                  <img
-                    src={selectedCharacter.image}
-                    alt={selectedCharacter.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://images.unsplash.com/photo-1578662996442-48f60103fc96";
-                    }}
-                  />
-                </div>
-
+      {/* Deity Detail Modal */}
+      {selectedDeity && (
+        <Dialog open={!!selectedDeity} onOpenChange={() => setSelectedDeity(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] bg-white dark:bg-gray-900">
+            <DialogHeader>
+              <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {selectedCharacter.description}
+                  <DialogTitle className="text-2xl font-bold text-amber-800 dark:text-amber-300">
+                    {selectedDeity.name}
+                  </DialogTitle>
+                  {selectedDeity.title && (
+                    <p className="text-lg text-gray-600 dark:text-gray-400 italic mt-1">
+                      {selectedDeity.title}
+                    </p>
+                  )}
+                  <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
+                    Part {selectedDeity.part}: {partTitles[selectedDeity.part]}
+                  </p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setSelectedDeity(null)}
+                  data-testid="button-close-deity-modal"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+            
+            <ScrollArea className="max-h-[70vh]">
+              <div className="space-y-6 pr-4">
+                {/* Main Description */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Divine Nature</h4>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {selectedDeity.description}
                   </p>
                 </div>
 
+                {/* Domains */}
                 <div>
-                  <h3 className="font-semibold mb-2">Domains & Aspects</h3>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Domains of Power</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedCharacter.domains.map(domain => (
-                      <Badge key={domain} variant="secondary">
+                    {(selectedDeity.domains as string[]).map((domain, index) => (
+                      <Badge 
+                        key={index} 
+                        className="bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                      >
                         {domain}
                       </Badge>
                     ))}
                   </div>
                 </div>
 
+                {/* Timeline and Era */}
+                {(selectedDeity.timeSpan || selectedDeity.era) && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Timeline</h4>
+                    <div className="space-y-2 text-sm">
+                      {selectedDeity.timeSpan && (
+                        <p className="text-gray-600 dark:text-gray-400">
+                          <span className="font-medium">Era:</span> {selectedDeity.timeSpan}
+                        </p>
+                      )}
+                      {selectedDeity.era && (
+                        <p className="text-gray-600 dark:text-gray-400">
+                          <span className="font-medium">Period:</span> {selectedDeity.era}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Chapter References */}
                 <div>
-                  <h3 className="font-semibold mb-2">Appears in Chapters</h3>
-                  <div className="space-y-1">
-                    {selectedCharacter.chapters.map(chapterId => (
-                      <div key={chapterId} className="text-sm text-muted-foreground">
-                        • {getChapterTitle(chapterId)}
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Appears In</h4>
+                  <div className="space-y-2">
+                    {(selectedDeity.chapters as string[]).map((chapterId, index) => (
+                      <div 
+                        key={index} 
+                        className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded"
+                      >
+                        <BookOpen className="h-4 w-4 text-amber-500" />
+                        <span className="font-mono">{chapterId}</span>
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Tags */}
+                {(selectedDeity.tags as string[]).length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Related Concepts</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {(selectedDeity.tags as string[]).map((tag, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="outline"
+                          className="text-xs border-amber-200 text-amber-700 dark:border-amber-700 dark:text-amber-300"
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </DialogContent>
-    </Dialog>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }

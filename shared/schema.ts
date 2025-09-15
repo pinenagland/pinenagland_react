@@ -83,6 +83,20 @@ export const practiceSessions = pgTable("practice_sessions", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+export const deities = pgTable("deities", {
+  id: varchar("id").primaryKey(),
+  name: text("name").notNull(),
+  title: text("title"), // e.g., "The Primordial Waters", "Lord of the Sun"
+  description: text("description").notNull(),
+  domains: jsonb("domains").default([]), // array of domains like ["Sun", "Kingship", "Divine Light"]
+  part: text("part").notNull(), // "I", "II", "III", etc. for book organization
+  chapters: jsonb("chapters").default([]), // array of chapter IDs where deity appears
+  image: text("image"), // URL for deity image
+  timeSpan: text("time_span"), // when they existed in mythology
+  era: text("era"),
+  tags: jsonb("tags").default([]),
+});
+
 // Insert schemas - Allow id to be provided for server-side creation with Firebase UID
 export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
@@ -114,6 +128,8 @@ export const insertPracticeSessionSchema = createInsertSchema(practiceSessions).
   timestamp: true,
 });
 
+export const insertDeitySchema = createInsertSchema(deities);
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -138,3 +154,6 @@ export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
 
 export type PracticeSession = typeof practiceSessions.$inferSelect;
 export type InsertPracticeSession = z.infer<typeof insertPracticeSessionSchema>;
+
+export type Deity = typeof deities.$inferSelect;
+export type InsertDeity = z.infer<typeof insertDeitySchema>;
