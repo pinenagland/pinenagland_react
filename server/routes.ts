@@ -4,6 +4,20 @@ import { storage } from "./storage";
 import { insertUserSchema, insertChatSessionSchema, insertUserProgressSchema, insertPracticeSessionSchema } from "@shared/schema";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { verifyFirebaseToken, optionalAuth } from "./middleware/auth";
+import { semanticSearch } from "./lib/embeddings";
+import { z } from "zod";
+
+// Zod schema for AI query validation
+const aiQuerySchema = z.object({
+  query: z.string().min(1, "Query cannot be empty").max(2000, "Query too long"),
+  chapterId: z.string().optional(),
+  sessionId: z.string().optional()
+});
+
+// Rate limiting map
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 30; // requests per window
 
 // Helper function to ensure user exists in database with Firebase UID
 async function ensureUserExists(firebaseUser: any) {
@@ -31,9 +45,10 @@ async function ensureUserExists(firebaseUser: any) {
 // Validate API key at startup
 if (!process.env.GEMINI_API_KEY) {
   console.error("GEMINI_API_KEY is required but not found in environment variables");
+  throw new Error("Missing GEMINI_API_KEY environment variable");
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
@@ -258,22 +273,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ai/query", optionalAuth, async (req, res) => {
+  app.post("/api/ai/query", verifyFirebaseToken, async (req, res) => {
     try {
-      const { query, chapterId, sessionId } = req.body;
+      // Rate limiting check
+      const userId = req.user!.uid;
+      const now = Date.now();
+      const userRateLimit = rateLimitMap.get(userId);
       
-      if (!query) {
-        return res.status(400).json({ message: "Query is required" });
+      if (userRateLimit) {
+        if (now < userRateLimit.resetTime) {
+          if (userRateLimit.count >= RATE_LIMIT_MAX_REQUESTS) {
+            return res.status(429).json({ 
+              message: "Rate limit exceeded. Please try again later.",
+              resetTime: userRateLimit.resetTime
+            });
+          }
+          userRateLimit.count++;
+        } else {
+          // Reset window
+          userRateLimit.count = 1;
+          userRateLimit.resetTime = now + RATE_LIMIT_WINDOW;
+        }
+      } else {
+        rateLimitMap.set(userId, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
       }
-
-      // Multi-agent system orchestration
-      const response = await processAIQuery(query, chapterId);
       
-      // Update chat session if provided and user is authenticated
-      if (sessionId && req.user) {
+      // Validate request body with Zod
+      const validationResult = aiQuerySchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          message: "Invalid request", 
+          errors: validationResult.error.errors 
+        });
+      }
+      
+      const { query, chapterId, sessionId } = validationResult.data;
+      
+      // Ensure user exists in database
+      await ensureUserExists(req.user!);
+
+      // Multi-agent system orchestration with timeout
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error("AI query timeout")), 30000)
+      );
+      
+      const response = await Promise.race([
+        processAIQuery(query, chapterId),
+        timeoutPromise
+      ]);
+      
+      // Update chat session if provided
+      if (sessionId) {
         const session = await storage.getChatSession(sessionId);
         // Verify the session belongs to the authenticated user
-        if (session && session.userId === req.user.uid) {
+        if (session && session.userId === req.user!.uid) {
           const messages = [...(session.messages as any[]), 
             { role: "user", content: query, timestamp: new Date() },
             { role: "ai", content: response.content, agents: response.agents, timestamp: new Date() }
@@ -285,7 +338,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(response);
     } catch (error) {
       console.error('AI query error:', error);
-      res.status(500).json({ message: "Failed to process AI query" });
+      if (error instanceof Error && error.message === "AI query timeout") {
+        res.status(408).json({ message: "Request timeout. Please try again." });
+      } else {
+        res.status(500).json({ message: "Failed to process AI query" });
+      }
     }
   });
 
@@ -341,33 +398,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 // Multi-agent AI system
 async function processAIQuery(query: string, chapterId?: string) {
   try {
-    // Mock fallback for MVP testing if no API key or API errors
-    if (true) { // Force mock mode for MVP testing
-      console.log('Using mock AI responses for MVP testing');
+    // Check for API key availability
+    if (!process.env.GEMINI_API_KEY) {
+      console.error('No Gemini API key available - falling back to basic response');
       return {
-        content: `The query about "${query}" touches on fascinating aspects of ancient civilizations. Through the lens of historical analysis, we can explore how Horus, the falcon god of kingship, represents the intersection of divine authority and earthly power in ancient Egyptian society. This mythological framework provided legitimacy for pharaonic rule and influenced later concepts of divine kingship throughout history.`,
-        agents: {
-          factChecker: {
-            verified_facts: ["Horus was indeed a major Egyptian deity", "Associated with kingship and divine authority", "Often depicted as a falcon or falcon-headed man"],
-            corrections: [],
-            confidence_level: "high",
-            sources: ["Ancient Egyptian religious texts", "Archaeological evidence", "Historical records"]
-          },
-          reasoner: {
-            reasoning_steps: ["Analyzed historical context of Egyptian mythology", "Examined political implications of divine kingship", "Connected to broader ancient world patterns"],
-            key_concepts: ["Divine kingship", "Religious authority", "Political legitimacy"],
-            connections: ["Links to other ancient divine king concepts", "Influence on later royal ideologies"],
-            implications: ["Understanding power structures in ancient societies", "Relevance to modern leadership concepts"]
-          },
-          narrator: {
-            narrative_response: `The query about "${query}" touches on fascinating aspects of ancient civilizations. Through the lens of historical analysis, we can explore how Horus, the falcon god of kingship, represents the intersection of divine authority and earthly power in ancient Egyptian society.`,
-            key_themes: ["Divine authority", "Ancient Egyptian culture", "Mythological symbolism"],
-            historical_connections: ["Links to pharaonic succession", "Connections to other Egyptian deities"],
-            modern_relevance: "These concepts help us understand how ancient societies legitimized political power through religious frameworks."
-          }
-        },
-        queryType: "historical_verification",
-        agentsUsed: ["fact-checker", "reasoner", "narrator"]
+        content: "I'm currently unable to access my full knowledge base. Please ensure the AI service is properly configured and try again.",
+        agents: {},
+        queryType: "error",
+        agentsUsed: []
       };
     }
     // Step 1: Orchestrator determines which agents to involve
@@ -415,39 +453,72 @@ IMPORTANT: Return ONLY valid JSON matching this exact format:
       };
     }
     
-    // Step 2: Get relevant context data
+    // Step 2: Initialize semantic search and get enhanced context data
+    await semanticSearch.initialize();
+    
     let contextData = "";
+    let chapterContext: any = {};
+    
     if (chapterId) {
-      const chapter = await storage.getChapter(chapterId);
-      if (chapter) {
-        contextData = `Chapter: ${chapter.title}\nContent: ${chapter.narrative.slice(0, 500)}...`;
+      chapterContext = await semanticSearch.getChapterContext(chapterId);
+      if (chapterContext.chapter) {
+        contextData = `Chapter: ${chapterContext.chapter.title}\nContent: ${chapterContext.chapter.narrative.slice(0, 500)}...`;
       }
     }
 
-    // Get relevant history events
-    const historyEvents = await storage.getHistoryEvents();
-    const relevantEvents = historyEvents.slice(0, 3);
-    const historyContext = relevantEvents.map(event => 
-      `${event.title} (${event.year}): ${event.description}`
+    // Use semantic search to get contextually relevant history events
+    const semanticResults = await semanticSearch.semanticSearch(query, {
+      limit: 8,
+      threshold: 0.6,
+      type: 'history_event'
+    });
+
+    const historicalContext = await semanticSearch.findHistoricalContext(query, {
+      includeSimilar: true
+    });
+
+    const historyContext = semanticResults.map(event => 
+      `${event.metadata.title} (${event.metadata.year}): ${event.content.slice(0, 200)}...`
     ).join('\n');
 
     // Step 3: Run the required agents
     const agentResults: any = {};
 
     if (orchestratorData.agents_needed?.includes("fact-checker")) {
+      // Enhanced fact-checker with semantic search results
+      const directMatches = historicalContext.directMatches;
+      const relatedEvents = historicalContext.relatedEvents;
+      const searchConfidence = historicalContext.confidence;
+      
       const factCheckPrompt = `
-As the Fact-Checker agent, verify the historical accuracy of this query against known historical data:
+As the Fact-Checker agent, verify the historical accuracy of this query using advanced semantic search results:
 
 Query: "${query}"
 Context: ${contextData}
-Historical Database: ${historyContext}
+
+SEMANTIC SEARCH RESULTS:
+Direct Matches (Confidence: ${searchConfidence.toFixed(2)}):
+${directMatches.map(match => 
+  `- ${match.metadata.title} (${match.metadata.year}, Similarity: ${match.similarity.toFixed(3)}): ${match.content.slice(0, 300)}...`
+).join('\n')}
+
+Related Historical Events:
+${relatedEvents.map(event => 
+  `- ${event.metadata.title} (${event.metadata.year}, Similarity: ${event.similarity.toFixed(3)}): ${event.content.slice(0, 200)}...`
+).join('\n')}
+
+Based on this semantic analysis, evaluate the historical accuracy and provide detailed fact-checking.
 
 Respond with JSON:
 {
-  "verified_facts": ["fact1", "fact2"],
-  "corrections": ["correction1", "correction2"],
+  "verified_facts": ["fact1", "fact2", "fact3"],
+  "corrections": ["correction1 if needed", "correction2 if needed"],
   "confidence_level": "high|medium|low",
-  "sources": ["source1", "source2"]
+  "semantic_confidence": ${searchConfidence},
+  "sources": ["source1", "source2", "source3"],
+  "supporting_evidence": ["evidence1", "evidence2"],
+  "related_concepts": ["concept1", "concept2"],
+  "accuracy_assessment": "detailed assessment of claim accuracy"
 }
 `;
 
@@ -456,40 +527,73 @@ Respond with JSON:
 
 IMPORTANT: Return ONLY valid JSON matching this exact format:
 {
-  "verified_facts": ["fact1", "fact2"],
-  "corrections": ["correction1", "correction2"],
+  "verified_facts": ["fact1", "fact2", "fact3"],
+  "corrections": ["correction1 if needed", "correction2 if needed"],
   "confidence_level": "high|medium|low",
-  "sources": ["source1", "source2"]
+  "semantic_confidence": ${searchConfidence},
+  "sources": ["source1", "source2", "source3"],
+  "supporting_evidence": ["evidence1", "evidence2"],
+  "related_concepts": ["concept1", "concept2"],
+  "accuracy_assessment": "detailed assessment of claim accuracy"
 }`;
 
       const factCheckResponse = await factCheckModel.generateContent(factCheckFullPrompt);
       
       try {
         agentResults.factChecker = JSON.parse(factCheckResponse.response.text() || "{}");
+        // Add semantic search metadata
+        agentResults.factChecker.direct_matches_count = directMatches.length;
+        agentResults.factChecker.related_events_count = relatedEvents.length;
+        agentResults.factChecker.search_sources = historicalContext.sources;
       } catch (error) {
         console.error('Failed to parse fact-checker response:', error);
         agentResults.factChecker = {
-          verified_facts: ["Historical information about the query"],
+          verified_facts: ["Based on semantic search of historical database"],
           corrections: [],
-          confidence_level: "medium",
-          sources: ["Historical database"]
+          confidence_level: searchConfidence > 0.8 ? "high" : searchConfidence > 0.6 ? "medium" : "low",
+          semantic_confidence: searchConfidence,
+          sources: historicalContext.sources || ["Historical database"],
+          supporting_evidence: directMatches.map(m => m.metadata.title),
+          related_concepts: relatedEvents.slice(0, 3).map(e => e.metadata.title),
+          accuracy_assessment: "Semantic analysis completed with available historical context"
         };
       }
     }
 
     if (orchestratorData.agents_needed?.includes("reasoner")) {
+      // Enhanced reasoner with semantic context
+      const relatedChapters = chapterContext.relatedChapters || [];
+      
       const reasonerPrompt = `
-As the Reasoner agent, break down this complex query step by step using Chain-of-Thought reasoning:
+As the Reasoner agent, break down this complex query step by step using Chain-of-Thought reasoning with semantic context:
 
 Query: "${query}"
 Context: ${contextData}
 
+SEMANTIC CONTEXT:
+Related Book Chapters:
+${relatedChapters.map(chapter => 
+  `- ${chapter.metadata.title} (Similarity: ${chapter.similarity.toFixed(3)}): ${chapter.content.slice(0, 150)}...`
+).join('\n')}
+
+Historical Events Context:
+${semanticResults.slice(0, 5).map(event => 
+  `- ${event.metadata.title} (${event.metadata.year}, Similarity: ${event.similarity.toFixed(3)})`
+).join('\n')}
+
+Fact-checking Results: ${JSON.stringify(agentResults.factChecker || {})}
+
+Using this enriched context, provide detailed reasoning analysis:
+
 Respond with JSON:
 {
-  "reasoning_steps": ["step1", "step2", "step3"],
-  "key_concepts": ["concept1", "concept2"],
-  "connections": ["connection1", "connection2"],
-  "implications": ["implication1", "implication2"]
+  "reasoning_steps": ["step1", "step2", "step3", "step4"],
+  "key_concepts": ["concept1", "concept2", "concept3"],
+  "connections": ["connection1", "connection2", "connection3"],
+  "implications": ["implication1", "implication2"],
+  "semantic_insights": ["insight1", "insight2"],
+  "mythological_patterns": ["pattern1", "pattern2"],
+  "historical_parallels": ["parallel1", "parallel2"]
 }
 `;
 
@@ -498,48 +602,88 @@ Respond with JSON:
 
 IMPORTANT: Return ONLY valid JSON matching this exact format:
 {
-  "reasoning_steps": ["step1", "step2", "step3"],
-  "key_concepts": ["concept1", "concept2"],
-  "connections": ["connection1", "connection2"],
-  "implications": ["implication1", "implication2"]
+  "reasoning_steps": ["step1", "step2", "step3", "step4"],
+  "key_concepts": ["concept1", "concept2", "concept3"],
+  "connections": ["connection1", "connection2", "connection3"],
+  "implications": ["implication1", "implication2"],
+  "semantic_insights": ["insight1", "insight2"],
+  "mythological_patterns": ["pattern1", "pattern2"],
+  "historical_parallels": ["parallel1", "parallel2"]
 }`;
 
       const reasonerResponse = await reasonerModel.generateContent(reasonerFullPrompt);
       
       try {
         agentResults.reasoner = JSON.parse(reasonerResponse.response.text() || "{}");
+        // Add semantic context metadata
+        agentResults.reasoner.related_chapters_count = relatedChapters.length;
+        agentResults.reasoner.semantic_events_count = semanticResults.length;
       } catch (error) {
         console.error('Failed to parse reasoner response:', error);
         agentResults.reasoner = {
-          reasoning_steps: ["Analyzing the query step by step"],
-          key_concepts: ["Historical context", "Cultural significance"],
-          connections: ["Links to ancient civilizations"],
-          implications: ["Relevance to modern understanding"]
+          reasoning_steps: [
+            "Analyzing query using semantic search context",
+            "Cross-referencing with historical database",
+            "Evaluating mythological connections",
+            "Drawing modern implications"
+          ],
+          key_concepts: ["Historical context", "Cultural significance", "Semantic analysis"],
+          connections: ["Links to ancient civilizations", "Mythological patterns", "Historical parallels"],
+          implications: ["Relevance to modern understanding", "Educational insights"],
+          semantic_insights: semanticResults.slice(0, 2).map(r => r.metadata.title),
+          mythological_patterns: relatedChapters.slice(0, 2).map(c => c.metadata.title),
+          historical_parallels: historicalContext.relatedEvents.slice(0, 2).map(e => e.metadata.title)
         };
       }
     }
 
     if (orchestratorData.agents_needed?.includes("narrator")) {
+      // Enhanced narrator with comprehensive semantic context
+      const allRelatedContent = [
+        ...semanticResults.slice(0, 3),
+        ...(chapterContext.relatedChapters || []).slice(0, 2)
+      ];
+      
       const narratorPrompt = `
-As the Narrator agent, generate a response in the semi-academic mythic storytelling style of "The Eternal Falcon":
+As the Narrator agent, generate a response in the semi-academic mythic storytelling style of "The Weavers of Eternity":
 
 Query: "${query}"
 Context: ${contextData}
+
+ENRICHED SEMANTIC CONTEXT:
 Fact-Check Results: ${JSON.stringify(agentResults.factChecker || {})}
 Reasoning Results: ${JSON.stringify(agentResults.reasoner || {})}
 
-Style guidelines:
-- Semi-academic: blend storytelling with historical accuracy
-- Root answers in Nile Valley contributions + wider historical context
-- Mythic tone but factually grounded
-- Bridge ancient wisdom with modern understanding
+Most Relevant Historical Events:
+${historicalContext.directMatches.map(match => 
+  `- ${match.metadata.title} (${match.metadata.year}): ${match.content.slice(0, 250)}...`
+).join('\n')}
+
+Related Book Chapters:
+${(chapterContext.relatedChapters || []).map(chapter => 
+  `- ${chapter.metadata.title}: ${chapter.content.slice(0, 200)}...`
+).join('\n')}
+
+Supporting Evidence:
+${historicalContext.sources.slice(0, 5).join(', ')}
+
+Style guidelines for "The Weavers of Eternity":
+- Semi-academic mythic storytelling that weaves together historical fact and narrative beauty
+- Root answers in Nile Valley contributions while connecting to broader historical context
+- Use evocative language that honors both scholarly rigor and storytelling tradition
+- Bridge ancient wisdom with modern understanding through poetic yet factual narration
+- Incorporate specific details from the semantic search results
+- Reference the confidence levels and supporting evidence from fact-checking
 
 Respond with JSON:
 {
-  "narrative_response": "detailed response text",
-  "key_themes": ["theme1", "theme2"],
-  "historical_connections": ["connection1", "connection2"],
-  "modern_relevance": "how this applies today"
+  "narrative_response": "detailed mythic storytelling response incorporating semantic search insights",
+  "key_themes": ["theme1", "theme2", "theme3"],
+  "historical_connections": ["connection1", "connection2", "connection3"],
+  "modern_relevance": "how this applies to contemporary understanding",
+  "confidence_indicators": ["indicator1", "indicator2"],
+  "source_integration": "how sources were woven into narrative",
+  "mythological_depth": "deeper mythological context revealed"
 }
 `;
 
@@ -548,23 +692,33 @@ Respond with JSON:
 
 IMPORTANT: Return ONLY valid JSON matching this exact format:
 {
-  "narrative_response": "detailed response text",
-  "key_themes": ["theme1", "theme2"],
-  "historical_connections": ["connection1", "connection2"],
-  "modern_relevance": "how this applies today"
+  "narrative_response": "detailed mythic storytelling response incorporating semantic search insights",
+  "key_themes": ["theme1", "theme2", "theme3"],
+  "historical_connections": ["connection1", "connection2", "connection3"],
+  "modern_relevance": "how this applies to contemporary understanding",
+  "confidence_indicators": ["indicator1", "indicator2"],
+  "source_integration": "how sources were woven into narrative",
+  "mythological_depth": "deeper mythological context revealed"
 }`;
 
       const narratorResponse = await narratorModel.generateContent(narratorFullPrompt);
       
       try {
         agentResults.narrator = JSON.parse(narratorResponse.response.text() || "{}");
+        // Add semantic search enrichment metadata
+        agentResults.narrator.semantic_sources_used = allRelatedContent.length;
+        agentResults.narrator.fact_check_confidence = historicalContext.confidence;
+        agentResults.narrator.direct_historical_matches = historicalContext.directMatches.length;
       } catch (error) {
         console.error('Failed to parse narrator response:', error);
         agentResults.narrator = {
-          narrative_response: `The query about "${query}" touches on fascinating aspects of ancient civilizations. Through the lens of historical analysis, we can explore how ancient wisdom continues to resonate with modern understanding.`,
-          key_themes: ["Ancient wisdom", "Historical significance", "Cultural continuity"],
-          historical_connections: ["Links to ancient Egyptian culture", "Connections to broader ancient world"],
-          modern_relevance: "These historical insights provide valuable perspective for contemporary understanding."
+          narrative_response: `The query about "${query}" weaves through the tapestry of ancient wisdom, drawing from ${historicalContext.directMatches.length} direct historical matches and ${historicalContext.relatedEvents.length} related events in our semantic analysis. Through the lens of "The Weavers of Eternity," we explore how these ancient currents continue to flow through the channels of time, offering insights rooted in the rich soil of the Nile Valley while connecting to the broader streams of human understanding.`,
+          key_themes: ["Ancient wisdom", "Semantic analysis", "Historical continuity"],
+          historical_connections: historicalContext.sources.slice(0, 3),
+          modern_relevance: "These historically-grounded insights, verified through semantic search, provide valuable perspective for contemporary understanding.",
+          confidence_indicators: [`Semantic confidence: ${historicalContext.confidence.toFixed(2)}`, `Direct matches: ${historicalContext.directMatches.length}`],
+          source_integration: "Multiple historical sources woven into narrative through semantic search",
+          mythological_depth: "Enhanced with contextual cross-references from ancient Egyptian sources"
         };
       }
     }
