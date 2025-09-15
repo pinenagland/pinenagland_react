@@ -178,50 +178,330 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
     };
     this.chapters.set(chapter3.id, chapter3);
 
-    // Seed history events
-    const pyramidsEvent: HistoryEvent = {
-      id: "pyramids_giza",
-      title: "Pyramids of Giza Construction",
-      year: -2580,
-      era: "Old Kingdom",
-      tags: ["Egypt", "Architecture", "Engineering"],
-      description: "The Great Pyramid of Giza, built for Pharaoh Khufu, represents the pinnacle of Old Kingdom architecture and engineering.",
-      region: "Egypt"
-    };
-    this.historyEvents.set(pyramidsEvent.id, pyramidsEvent);
+    // Seed comprehensive history events across multiple eras
+    const historyEventsSeed: HistoryEvent[] = [
+      // Prehistoric Era
+      {
+        id: "neolithic_revolution",
+        title: "Neolithic Revolution Begins",
+        year: -12000,
+        era: "Prehistoric",
+        tags: ["Global", "Agriculture", "Civilization"],
+        description: "Agricultural revolution transforms human society, leading to permanent settlements and the foundation for civilization.",
+        region: "Global"
+      },
+      {
+        id: "sahara_desertification",
+        title: "Sahara Desertification Forces Nile Migration",
+        year: -5000,
+        era: "Prehistoric",
+        tags: ["Egypt", "Climate", "Migration"],
+        description: "Climate change transforms the Sahara from grassland to desert, forcing populations to migrate to the Nile Valley, concentrating Egyptian civilization.",
+        region: "Egypt"
+      },
+      // Predynastic Period
+      {
+        id: "egyptian_creation_myths",
+        title: "Development of Egyptian Creation Myths",
+        year: -3500,
+        era: "Predynastic",
+        tags: ["Egypt", "Mythology", "Religion", "Creation"],
+        description: "The foundational myths of Nu, Atum, and the first gods begin to take shape in early Egyptian religious thought, establishing the cosmological framework that would influence all later Egyptian civilization.",
+        region: "Egypt"
+      },
+      {
+        id: "hieroglyphic_writing",
+        title: "Hieroglyphic Writing System Emerges",
+        year: -3200,
+        era: "Predynastic",
+        tags: ["Egypt", "Writing", "Cultural"],
+        description: "The earliest hieroglyphic inscriptions appear, marking the birth of one of humanity's great writing systems.",
+        region: "Egypt"
+      },
+      // Early Dynastic Period
+      {
+        id: "first_dynasty",
+        title: "First Egyptian Dynasty - Unification",
+        year: -3100,
+        era: "Early Dynastic",
+        tags: ["Egypt", "Political", "Unification"],
+        description: "Narmer (Menes) unifies Upper and Lower Egypt, establishing the first pharaonic dynasty and the template for divine kingship that would endure for millennia.",
+        region: "Egypt"
+      },
+      {
+        id: "memphis_founded",
+        title: "Memphis Founded as Capital",
+        year: -3100,
+        era: "Early Dynastic",
+        tags: ["Egypt", "Political", "Urban Planning"],
+        description: "Memphis is established at the junction of Upper and Lower Egypt, serving as the administrative center of the unified kingdom.",
+        region: "Egypt"
+      },
+      // Old Kingdom Period
+      {
+        id: "step_pyramid",
+        title: "Step Pyramid of Djoser Built",
+        year: -2670,
+        era: "Old Kingdom",
+        tags: ["Egypt", "Architecture", "Engineering"],
+        description: "Imhotep designs the first monumental stone building, revolutionizing architecture and establishing the pyramid tradition.",
+        region: "Egypt"
+      },
+      {
+        id: "pyramids_giza",
+        title: "Great Pyramids of Giza Construction",
+        year: -2580,
+        era: "Old Kingdom",
+        tags: ["Egypt", "Architecture", "Engineering"],
+        description: "The Great Pyramid of Giza, built for Pharaoh Khufu, represents the pinnacle of Old Kingdom architecture and engineering, standing as one of the Seven Wonders of the Ancient World.",
+        region: "Egypt"
+      },
+      {
+        id: "great_sphinx",
+        title: "Great Sphinx of Giza Carved",
+        year: -2500,
+        era: "Old Kingdom",
+        tags: ["Egypt", "Architecture", "Mythology"],
+        description: "The Great Sphinx, possibly representing Khafre, becomes an enduring symbol of Egyptian mystery and divine kingship.",
+        region: "Egypt"
+      },
+      // Middle Kingdom Period
+      {
+        id: "middle_kingdom_rise",
+        title: "Middle Kingdom Reunification",
+        year: -2055,
+        era: "Middle Kingdom",
+        tags: ["Egypt", "Political", "Renaissance"],
+        description: "After the First Intermediate Period's chaos, Mentuhotep II reunifies Egypt, beginning a golden age of literature and culture.",
+        region: "Egypt"
+      },
+      {
+        id: "coffin_texts",
+        title: "Coffin Texts Democratize Afterlife",
+        year: -2000,
+        era: "Middle Kingdom",
+        tags: ["Egypt", "Religion", "Cultural"],
+        description: "Religious texts previously reserved for pharaohs become available to nobility and commoners, transforming Egyptian spiritual life.",
+        region: "Egypt"
+      },
+      // New Kingdom Period
+      {
+        id: "hatshepsut_reign",
+        title: "Hatshepsut's Peaceful Reign",
+        year: -1479,
+        era: "New Kingdom",
+        tags: ["Egypt", "Political", "Architecture"],
+        description: "Queen Hatshepsut rules as pharaoh for 22 years, focusing on trade, architecture, and artistic achievement rather than conquest.",
+        region: "Egypt"
+      },
+      {
+        id: "akhenaten_revolution",
+        title: "Akhenaten's Religious Revolution",
+        year: -1353,
+        era: "New Kingdom",
+        tags: ["Egypt", "Religion", "Cultural"],
+        description: "Pharaoh Akhenaten attempts to establish monotheistic worship of Aten, fundamentally challenging Egyptian religious tradition.",
+        region: "Egypt"
+      },
+      {
+        id: "tutankhamun_tomb",
+        title: "Tutankhamun's Burial",
+        year: -1323,
+        era: "New Kingdom",
+        tags: ["Egypt", "Archaeological", "Cultural"],
+        description: "The young pharaoh Tutankhamun is buried with unprecedented treasures, creating the most famous archaeological discovery of the 20th century.",
+        region: "Egypt"
+      },
+      {
+        id: "ramesses_abu_simbel",
+        title: "Abu Simbel Temples Built",
+        year: -1264,
+        era: "New Kingdom",
+        tags: ["Egypt", "Architecture", "Political"],
+        description: "Ramesses II constructs the magnificent Abu Simbel temples, demonstrating Egyptian power and artistic achievement at its peak.",
+        region: "Egypt"
+      },
+      // Classical Period
+      {
+        id: "persian_conquest",
+        title: "Persian Conquest of Egypt",
+        year: -525,
+        era: "Classical Period",
+        tags: ["Egypt", "Political", "Foreign Rule"],
+        description: "Cambyses II conquers Egypt, ending native pharaonic rule and beginning centuries of foreign domination.",
+        region: "Egypt"
+      },
+      {
+        id: "alexander_egypt",
+        title: "Alexander the Great Conquers Egypt",
+        year: -332,
+        era: "Classical Period",
+        tags: ["Egypt", "Political", "Hellenistic"],
+        description: "Alexander liberates Egypt from Persian rule and founds Alexandria, beginning the Hellenistic period in Egyptian history.",
+        region: "Egypt"
+      },
+      {
+        id: "alexandria_founded",
+        title: "Alexandria Founded",
+        year: -331,
+        era: "Classical Period",
+        tags: ["Egypt", "Urban Planning", "Cultural"],
+        description: "Alexandria becomes the intellectual and commercial center of the Mediterranean world, housing the Great Library.",
+        region: "Egypt"
+      },
+      {
+        id: "ptolemaic_dynasty",
+        title: "Ptolemaic Dynasty Established",
+        year: -305,
+        era: "Classical Period",
+        tags: ["Egypt", "Political", "Hellenistic"],
+        description: "Ptolemy I establishes the last pharaonic dynasty, blending Greek and Egyptian cultures for three centuries.",
+        region: "Egypt"
+      },
+      {
+        id: "rosetta_stone_created",
+        title: "Rosetta Stone Inscribed",
+        year: -196,
+        era: "Classical Period",
+        tags: ["Egypt", "Cultural", "Writing"],
+        description: "A decree in three scripts is carved, unknowingly creating the key that would later unlock hieroglyphic writing.",
+        region: "Egypt"
+      },
+      {
+        id: "cleopatra_death",
+        title: "Death of Cleopatra VII",
+        year: -30,
+        era: "Classical Period",
+        tags: ["Egypt", "Political", "Roman"],
+        description: "The last pharaoh of Egypt dies, ending three millennia of pharaonic rule as Egypt becomes a Roman province.",
+        region: "Egypt"
+      },
+      // Roman/Byzantine Period
+      {
+        id: "christianity_egypt",
+        title: "Christianity Spreads in Egypt",
+        year: 100,
+        era: "Roman Period",
+        tags: ["Egypt", "Religion", "Cultural"],
+        description: "Christianity takes root in Egypt, eventually transforming into the Coptic Church and ending traditional Egyptian religion.",
+        region: "Egypt"
+      },
+      {
+        id: "monastery_movement",
+        title: "Christian Monastery Movement Begins",
+        year: 270,
+        era: "Roman Period",
+        tags: ["Egypt", "Religion", "Cultural"],
+        description: "St. Anthony founds Christian monasticism in the Egyptian desert, influencing religious life worldwide.",
+        region: "Egypt"
+      },
+      // Islamic Period
+      {
+        id: "arab_conquest",
+        title: "Arab Conquest of Egypt",
+        year: 641,
+        era: "Medieval",
+        tags: ["Egypt", "Political", "Islamic"],
+        description: "Arab armies conquer Byzantine Egypt, beginning the Islamic period and gradual Arabization of Egyptian society.",
+        region: "Egypt"
+      },
+      {
+        id: "cairo_founded",
+        title: "Cairo Founded by Fatimids",
+        year: 969,
+        era: "Medieval",
+        tags: ["Egypt", "Urban Planning", "Islamic"],
+        description: "The Fatimid dynasty establishes Cairo (Al-Qahirah), which becomes one of the Islamic world's greatest cities.",
+        region: "Egypt"
+      },
+      {
+        id: "saladin_ayyubids",
+        title: "Saladin Establishes Ayyubid Dynasty",
+        year: 1171,
+        era: "Medieval",
+        tags: ["Egypt", "Political", "Islamic"],
+        description: "Saladin overthrows the Fatimids and establishes the Ayyubid dynasty, making Egypt the center of resistance to the Crusades.",
+        region: "Egypt"
+      },
+      {
+        id: "mamluks_rise",
+        title: "Mamluk Sultanate Established",
+        year: 1250,
+        era: "Medieval",
+        tags: ["Egypt", "Political", "Military"],
+        description: "Former slave soldiers establish the Mamluk Sultanate, creating one of the medieval world's most powerful military states.",
+        region: "Egypt"
+      },
+      // Modern Period
+      {
+        id: "ottoman_conquest",
+        title: "Ottoman Conquest of Egypt",
+        year: 1517,
+        era: "Early Modern",
+        tags: ["Egypt", "Political", "Ottoman"],
+        description: "The Ottoman Empire conquers Egypt, making it a province of the empire while maintaining considerable autonomy.",
+        region: "Egypt"
+      },
+      {
+        id: "napoleon_expedition",
+        title: "Napoleon's Egyptian Expedition",
+        year: 1798,
+        era: "Modern Era",
+        tags: ["Egypt", "Archaeological", "European"],
+        description: "Napoleon's campaign brings European scholars to Egypt, launching modern Egyptology and rediscovering ancient Egypt for the Western world.",
+        region: "Egypt"
+      },
+      {
+        id: "rosetta_stone_discovery",
+        title: "Rosetta Stone Discovered",
+        year: 1799,
+        era: "Modern Era",
+        tags: ["Egypt", "Archaeological", "Discovery"],
+        description: "French soldiers discover the Rosetta Stone, providing the key to deciphering hieroglyphs and unlocking ancient Egyptian texts.",
+        region: "Egypt"
+      },
+      {
+        id: "champollion_hieroglyphs",
+        title: "Champollion Deciphers Hieroglyphs",
+        year: 1822,
+        era: "Modern Era",
+        tags: ["Egypt", "Archaeological", "Discovery"],
+        description: "Jean-François Champollion successfully decodes hieroglyphic writing, opening the door to understanding ancient Egyptian civilization.",
+        region: "Egypt"
+      },
+      {
+        id: "suez_canal",
+        title: "Suez Canal Opens",
+        year: 1869,
+        era: "Modern Era",
+        tags: ["Egypt", "Engineering", "Global Trade"],
+        description: "The Suez Canal opens, transforming Egypt into a crucial hub of global commerce and strategic importance.",
+        region: "Egypt"
+      },
+      {
+        id: "tutankhamun_discovery",
+        title: "Discovery of Tutankhamun's Tomb",
+        year: 1922,
+        era: "Modern Era",
+        tags: ["Egypt", "Archaeological", "Discovery"],
+        description: "Howard Carter discovers the intact tomb of Tutankhamun, creating a worldwide sensation and advancing understanding of New Kingdom Egypt.",
+        region: "Egypt"
+      },
+      {
+        id: "egyptian_independence",
+        title: "Egyptian Independence",
+        year: 1952,
+        era: "Modern Era",
+        tags: ["Egypt", "Political", "Independence"],
+        description: "The Free Officers Revolution ends the monarchy and establishes the Republic of Egypt, beginning the modern era of Egyptian independence.",
+        region: "Egypt"
+      }
+    ];
 
-    const firstDynasty: HistoryEvent = {
-      id: "first_dynasty",
-      title: "First Egyptian Dynasty",
-      year: -3100,
-      era: "Early Dynastic",
-      tags: ["Egypt", "Politics", "Unification"],
-      description: "Narmer (Menes) unifies Upper and Lower Egypt, establishing the first pharaonic dynasty and the template for divine kingship.",
-      region: "Egypt"
-    };
-    this.historyEvents.set(firstDynasty.id, firstDynasty);
-
-    const neolithic: HistoryEvent = {
-      id: "neolithic_revolution",
-      title: "Neolithic Revolution Begins",
-      year: -12000,
-      era: "Prehistoric",
-      tags: ["Global", "Agriculture", "Civilization"],
-      description: "Agricultural revolution transforms human society, leading to permanent settlements and the foundation for civilization.",
-      region: "Global"
-    };
-    this.historyEvents.set(neolithic.id, neolithic);
-
-    const creationMyths: HistoryEvent = {
-      id: "egyptian_creation_myths",
-      title: "Development of Egyptian Creation Myths",
-      year: -3500,
-      era: "Predynastic",
-      tags: ["Egypt", "Mythology", "Religion", "Creation"],
-      description: "The foundational myths of Nu, Atum, and the first gods begin to take shape in early Egyptian religious thought, establishing the cosmological framework that would influence all later Egyptian civilization.",
-      region: "Egypt"
-    };
-    this.historyEvents.set(creationMyths.id, creationMyths);
+    // Add all events to storage
+    historyEventsSeed.forEach(event => {
+      this.historyEvents.set(event.id, event);
+    });
 
     // Seed practices aligned with "The Weavers of Eternity"
     const breathOfNu: Practice = {
@@ -272,6 +552,9 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
     const user: User = { 
       ...insertUser, 
       id,
+      preferences: insertUser.preferences || {},
+      goals: insertUser.goals || {},
+      progress: insertUser.progress || {},
       createdAt: new Date(),
       updatedAt: new Date()
     };
