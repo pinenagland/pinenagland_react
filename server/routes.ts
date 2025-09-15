@@ -273,10 +273,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ai/query", verifyFirebaseToken, async (req, res) => {
+  app.post("/api/ai/query", optionalAuth, async (req, res) => {
     try {
-      // Rate limiting check
-      const userId = req.user!.uid;
+      // Rate limiting check - use IP address if no authenticated user
+      const userId = req.user?.uid || req.ip || 'anonymous';
       const now = Date.now();
       const userRateLimit = rateLimitMap.get(userId);
       
@@ -309,8 +309,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { query, chapterId, sessionId } = validationResult.data;
       
-      // Ensure user exists in database
-      await ensureUserExists(req.user!);
+      // Ensure user exists in database only if authenticated
+      if (req.user) {
+        await ensureUserExists(req.user);
+      }
 
       // Multi-agent system orchestration with timeout
       const timeoutPromise = new Promise<never>((_, reject) => 
@@ -322,11 +324,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         timeoutPromise
       ]);
       
-      // Update chat session if provided
-      if (sessionId) {
+      // Update chat session if provided and user is authenticated
+      if (sessionId && req.user) {
         const session = await storage.getChatSession(sessionId);
         // Verify the session belongs to the authenticated user
-        if (session && session.userId === req.user!.uid) {
+        if (session && session.userId === req.user.uid) {
           const messages = [...(session.messages as any[]), 
             { role: "user", content: query, timestamp: new Date() },
             { role: "ai", content: response.content, agents: response.agents, timestamp: new Date() }
@@ -440,6 +442,9 @@ async function processAIQuery(query: string, chapterId?: string) {
 
     // Run fact-checker agent for historical verification
     const agentResults: any = {};
+    
+    // Always run fact-checker for historical verification
+    if (true) {
       // Enhanced fact-checker with semantic search results
       const directMatches = historicalContext.directMatches;
       const relatedEvents = historicalContext.relatedEvents;
