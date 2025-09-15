@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertChatSessionSchema, insertUserProgressSchema } from "@shared/schema";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { verifyFirebaseToken, optionalAuth } from "./middleware/auth";
 
 // Validate API key at startup
 if (!process.env.GEMINI_API_KEY) {
@@ -13,8 +14,38 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // User routes
-  app.get("/api/users/:id", async (req, res) => {
+  app.get("/api/users/me", verifyFirebaseToken, async (req, res) => {
     try {
+      let user = await storage.getUser(req.user!.uid);
+      
+      // Auto-create user if they exist in Firebase but not in DB
+      if (!user && req.user) {
+        const userData = {
+          id: req.user.uid,
+          name: req.user.name || req.user.email?.split('@')[0] || 'User',
+          email: req.user.email || ''
+        };
+        user = await storage.createUser(userData);
+      }
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error('Get user error:', error);
+      res.status(500).json({ message: "Failed to get user" });
+    }
+  });
+
+  // Legacy route for backward compatibility - but now secured
+  app.get("/api/users/:id", verifyFirebaseToken, async (req, res) => {
+    try {
+      // Only allow users to access their own data
+      if (req.params.id !== req.user!.uid) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
       const user = await storage.getUser(req.params.id);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -25,24 +56,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/users", async (req, res) => {
+  app.post("/api/users", verifyFirebaseToken, async (req, res) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
-      const user = await storage.createUser(userData);
+      // Use verified user ID from token, not from request body
+      const userData = {
+        id: req.user!.uid,
+        name: req.body.name || req.user!.name || 'User',
+        email: req.user!.email || ''
+      };
+      
+      // Validate the data structure
+      const validatedData = insertUserSchema.parse(userData);
+      const user = await storage.createUser(validatedData);
       res.json(user);
     } catch (error) {
+      console.error('Create user error:', error);
       res.status(400).json({ message: "Invalid user data" });
     }
   });
 
-  app.patch("/api/users/:id", async (req, res) => {
+  app.patch("/api/users/:id", verifyFirebaseToken, async (req, res) => {
     try {
-      const user = await storage.updateUser(req.params.id, req.body);
+      // Only allow users to update their own data
+      if (req.params.id !== req.user!.uid) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Filter out fields that shouldn't be updated by users
+      const { id, ...updateData } = req.body;
+      
+      const user = await storage.updateUser(req.params.id, updateData);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
       res.json(user);
     } catch (error) {
+      console.error('Update user error:', error);
       res.status(500).json({ message: "Failed to update user" });
     }
   });
@@ -107,18 +156,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Chat and AI routes
-  app.post("/api/chat/sessions", async (req, res) => {
+  app.post("/api/chat/sessions", verifyFirebaseToken, async (req, res) => {
     try {
-      const sessionData = insertChatSessionSchema.parse(req.body);
-      const session = await storage.createChatSession(sessionData);
+      // Use verified user ID from token
+      const sessionData = {
+        ...req.body,
+        userId: req.user!.uid
+      };
+      
+      const validatedData = insertChatSessionSchema.parse(sessionData);
+      const session = await storage.createChatSession(validatedData);
       res.json(session);
     } catch (error) {
+      console.error('Create chat session error:', error);
       res.status(400).json({ message: "Invalid session data" });
     }
   });
 
-  app.get("/api/chat/sessions/:userId", async (req, res) => {
+  app.get("/api/chat/sessions/:userId", verifyFirebaseToken, async (req, res) => {
     try {
+      // Only allow users to access their own chat sessions
+      if (req.params.userId !== req.user!.uid) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
       const sessions = await storage.getChatSessionsByUser(req.params.userId);
       res.json(sessions);
     } catch (error) {
@@ -126,7 +187,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/ai/query", async (req, res) => {
+  // New route that gets current user's sessions
+  app.get("/api/chat/sessions", verifyFirebaseToken, async (req, res) => {
+    try {
+      const sessions = await storage.getChatSessionsByUser(req.user!.uid);
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get chat sessions" });
+    }
+  });
+
+  app.post("/api/ai/query", optionalAuth, async (req, res) => {
     try {
       const { query, chapterId, sessionId } = req.body;
       
@@ -137,10 +208,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Multi-agent system orchestration
       const response = await processAIQuery(query, chapterId);
       
-      // Update chat session if provided
-      if (sessionId) {
+      // Update chat session if provided and user is authenticated
+      if (sessionId && req.user) {
         const session = await storage.getChatSession(sessionId);
-        if (session) {
+        // Verify the session belongs to the authenticated user
+        if (session && session.userId === req.user.uid) {
           const messages = [...(session.messages as any[]), 
             { role: "user", content: query, timestamp: new Date() },
             { role: "ai", content: response.content, agents: response.agents, timestamp: new Date() }
@@ -157,8 +229,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Progress tracking routes
-  app.get("/api/progress/:userId", async (req, res) => {
+  app.get("/api/progress/:userId", verifyFirebaseToken, async (req, res) => {
     try {
+      // Only allow users to access their own progress
+      if (req.params.userId !== req.user!.uid) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
       const progress = await storage.getUserProgress(req.params.userId);
       res.json(progress);
     } catch (error) {
@@ -166,12 +243,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/progress", async (req, res) => {
+  // New route that gets current user's progress
+  app.get("/api/progress", verifyFirebaseToken, async (req, res) => {
     try {
-      const progressData = insertUserProgressSchema.parse(req.body);
-      const progress = await storage.createOrUpdateProgress(progressData);
+      const progress = await storage.getUserProgress(req.user!.uid);
       res.json(progress);
     } catch (error) {
+      res.status(500).json({ message: "Failed to get user progress" });
+    }
+  });
+
+  app.post("/api/progress", verifyFirebaseToken, async (req, res) => {
+    try {
+      // Use verified user ID from token
+      const progressData = {
+        ...req.body,
+        userId: req.user!.uid
+      };
+      
+      const validatedData = insertUserProgressSchema.parse(progressData);
+      const progress = await storage.createOrUpdateProgress(validatedData);
+      res.json(progress);
+    } catch (error) {
+      console.error('Create/update progress error:', error);
       res.status(400).json({ message: "Invalid progress data" });
     }
   });

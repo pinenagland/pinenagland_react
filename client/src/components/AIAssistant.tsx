@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Bot, 
   User, 
@@ -40,6 +41,7 @@ interface Message {
 }
 
 export default function AIAssistant({ chapterId, standalone = false }: AIAssistantProps) {
+  const { firebaseUser } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -57,6 +59,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
       const response = await apiRequest("POST", "/api/ai/query", {
         query,
         chapterId,
+        userId: firebaseUser?.uid,
       });
       return response.json() as Promise<AIResponse>;
     },

@@ -1,5 +1,8 @@
-import { Eye, BookOpen, MessageCircle, History, Clover, UserCircle, Settings } from "lucide-react";
+import { Eye, BookOpen, MessageCircle, History, Clover, UserCircle, Settings, LogIn, LogOut } from "lucide-react";
 import devanAvatraLogo from "@/assets/devan-avatra-logo.jpg";
+import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
+import AuthModal from "@/components/auth/AuthModal";
 
 interface SidebarProps {
   currentView: string;
@@ -7,6 +10,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
+  const { firebaseUser, dbUser, logout } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const navigationItems = [
     { id: "book", label: "Book Reader", icon: BookOpen },
     { id: "chat", label: "Devan Avatra", icon: MessageCircle },
@@ -56,23 +61,41 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
 
       {/* User Profile Summary */}
       <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          <img 
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face" 
-            alt="User avatar" 
-            className="w-8 h-8 rounded-full object-cover" 
-          />
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm">Syed</p>
-            <p className="text-muted-foreground text-xs">Chapter 7 of 50</p>
+        {firebaseUser ? (
+          <div className="flex items-center gap-3">
+            <img 
+              src={firebaseUser.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face"} 
+              alt="User avatar" 
+              className="w-8 h-8 rounded-full object-cover" 
+            />
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">{dbUser?.name || firebaseUser.displayName || "User"}</p>
+              <p className="text-muted-foreground text-xs">Prologue of 72</p>
+            </div>
+            <button 
+              className="text-muted-foreground hover:text-foreground"
+              onClick={logout}
+              data-testid="button-logout"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
+        ) : (
           <button 
-            className="text-muted-foreground hover:text-foreground"
-            data-testid="button-settings"
+            onClick={() => setShowAuthModal(true)}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-left transition-colors hover:bg-muted"
+            data-testid="button-login"
           >
-            <Settings className="w-4 h-4" />
+            <LogIn className="w-4 h-4" />
+            <span className="text-sm">Sign In / Register</span>
           </button>
-        </div>
+        )}
+        
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
       </div>
     </aside>
   );

@@ -6,6 +6,9 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   X, 
@@ -15,7 +18,8 @@ import {
   Plus,
   Edit,
   Save,
-  TrendingUp
+  TrendingUp,
+  User
 } from "lucide-react";
 
 interface ProfileModalProps {
@@ -30,45 +34,55 @@ interface UserGoal {
 }
 
 export default function ProfileModal({ onClose }: ProfileModalProps) {
+  const { firebaseUser, dbUser, logout } = useAuth();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [newGoal, setNewGoal] = useState({ category: "", description: "" });
+  const [preferences, setPreferences] = useState({
+    readingGoal: dbUser?.preferences?.readingGoal || "",
+    interests: dbUser?.preferences?.interests || "",
+    notes: dbUser?.goals?.notes || ""
+  });
   const queryClient = useQueryClient();
 
-  // Mock user data - in a real app this would come from authentication
-  const mockUserData = {
-    id: "user_123",
-    name: "Syed",
-    email: "syed@example.com",
-    readingProgress: {
-      chaptersRead: 14,
-      totalChapters: 50,
-      currentChapter: "Chapter 41: Horus – The Falcon God of Kingship"
-    },
-    goals: [
-      {
-        category: "Lifestyle",
-        description: "Improve sleep quality and energy",
-        progress: 75,
-        status: "On Track"
-      },
-      {
-        category: "Finance", 
-        description: "Save $2000 for travel",
-        progress: 50,
-        status: "In Progress"
-      },
-      {
-        category: "Relationships",
-        description: "Better communication skills", 
-        progress: 67,
-        status: "Active"
-      }
-    ] as UserGoal[],
-    aiConversations: 247,
-    meditationSessions: 12
-  };
+  // Fetch user progress
+  const { data: userProgress } = useQuery({
+    queryKey: ["/api/progress"],
+    enabled: !!firebaseUser?.uid,
+  });
 
-  const progressPercent = (mockUserData.readingProgress.chaptersRead / mockUserData.readingProgress.totalChapters) * 100;
+  if (!firebaseUser) {
+    return (
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profile & Goals</DialogTitle>
+          </DialogHeader>
+          <p className="text-center text-muted-foreground py-8">
+            Please sign in to access your profile and reading goals.
+          </p>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  const completedChapters = Array.isArray(userProgress) ? userProgress.filter((p: any) => p.completed)?.length : 0;
+  const totalChapters = 72; // Based on our book structure
+
+  const progressPercent = (completedChapters / totalChapters) * 100;
+
+  const updateUserMutation = useMutation({
+    mutationFn: async (updates: any) => {
+      return apiRequest("PATCH", `/api/users/${firebaseUser?.uid}`, updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users/me"] });
+      toast({
+        title: "Profile updated",
+        description: "Your preferences have been saved successfully."
+      });
+    }
+  });
 
   const addGoalMutation = useMutation({
     mutationFn: async (goal: { category: string; description: string }) => {
@@ -80,6 +94,18 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
       // In a real app, invalidate queries to refetch user data
     }
   });
+
+  const handleSavePreferences = () => {
+    updateUserMutation.mutate({
+      preferences: {
+        readingGoal: preferences.readingGoal,
+        interests: preferences.interests
+      },
+      goals: {
+        notes: preferences.notes
+      }
+    });
+  };
 
   const handleAddGoal = () => {
     if (newGoal.category && newGoal.description) {
@@ -135,7 +161,7 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium">Overall Progress</span>
                       <span className="text-sm text-muted-foreground">
-                        {mockUserData.readingProgress.chaptersRead} of {mockUserData.readingProgress.totalChapters} chapters
+                        {completedChapters} of {totalChapters} chapters
                       </span>
                     </div>
                     <Progress value={progressPercent} className="mb-2" />
@@ -147,7 +173,7 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
                   <CardContent className="p-4">
                     <h5 className="font-medium mb-2">Current Chapter</h5>
                     <p className="text-sm text-muted-foreground">
-                      {mockUserData.readingProgress.currentChapter}
+                      Chapter {completedChapters + 1}
                     </p>
                   </CardContent>
                 </Card>
@@ -156,7 +182,7 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
                   <CardContent className="p-4">
                     <h5 className="font-medium mb-2">AI Conversations</h5>
                     <div className="flex items-center gap-2">
-                      <p className="text-2xl font-bold text-primary">{mockUserData.aiConversations}</p>
+                      <p className="text-2xl font-bold text-primary">0</p>
                       <TrendingUp className="w-4 h-4 text-wellness" />
                     </div>
                     <p className="text-xs text-muted-foreground">Questions answered this month</p>
@@ -183,7 +209,7 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
               </div>
               
               <div className="space-y-4">
-                {mockUserData.goals.map((goal, index) => (
+                {[].map((goal: any, index: number) => (
                   <Card key={index}>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-2">
