@@ -1,4 +1,5 @@
 import { Eye, BookOpen, MessageCircle, History, Clover, UserCircle, Settings } from "lucide-react";
+import devanAvatraLogo from "@/assets/devan-avatra-logo.jpg";
 
 interface SidebarProps {
   currentView: string;
@@ -8,7 +9,7 @@ interface SidebarProps {
 export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
   const navigationItems = [
     { id: "book", label: "Book Reader", icon: BookOpen },
-    { id: "chat", label: "AI Conversations", icon: MessageCircle },
+    { id: "chat", label: "Devan Avatra", icon: MessageCircle },
     { id: "timeline", label: "History Explorer", icon: History },
     { id: "meditation", label: "Meditation & Yoga", icon: Clover },
     { id: "profile", label: "Profile & Goals", icon: UserCircle },
@@ -19,12 +20,12 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
       {/* Logo and Title */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 gradient-primary rounded-lg flex items-center justify-center">
-            <Eye className="w-5 h-5 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center">
+            <img src={devanAvatraLogo} alt="Devan Avatra" className="w-10 h-10 object-cover" />
           </div>
           <div>
-            <h1 className="font-serif font-semibold text-lg">The Eternal Falcon</h1>
-            <p className="text-muted-foreground text-sm">Mythic Journey</p>
+            <h1 className="font-serif font-semibold text-lg">The Weavers of Eternity</h1>
+            <p className="text-muted-foreground text-sm">Chronicle of Egyptian Gods</p>
           </div>
         </div>
       </div>

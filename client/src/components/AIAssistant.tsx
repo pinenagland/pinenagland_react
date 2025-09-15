@@ -14,6 +14,7 @@ import {
   Brain, 
   Scroll
 } from "lucide-react";
+import devanAvatraLogo from "@/assets/devan-avatra-logo.jpg";
 
 interface AIAssistantProps {
   chapterId: string | null;
@@ -42,7 +43,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content: "Welcome! I'm here to help you explore The Eternal Falcon. I can fact-check historical claims, explain complex concepts, or provide deeper context about ancient civilizations. What would you like to know?",
+      content: "Welcome! I'm Devan Avatra, your guide through The Weavers of Eternity. I can help you explore the chronicle of Egyptian gods, fact-check mythological details, and reveal the deeper meanings within these ancient stories. What aspect of the divine tapestry would you like to explore?",
       timestamp: new Date(),
     }
   ]);
@@ -99,10 +100,12 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
   };
 
   const quickQuestions = [
-    "How did Horus influence later royal traditions?",
-    "What's the connection to the Eye of Horus?",
-    "Show me the timeline of falcon imagery",
-    "What are the health benefits of ancient remedies?",
+    "Tell me about Nu, the infinite waters",
+    "How do Kek and Heh create cosmic balance?",
+    "What is the significance of Amun being hidden?",
+    "How does Mut embody divine motherhood?",
+    "Explain the rise of Tatenen from the waters",
+    "What role does Khonsu play as timekeeper?",
   ];
 
   useEffect(() => {
@@ -129,12 +132,12 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
       {/* AI Assistant Header */}
       <CardHeader className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 gradient-accent rounded-full flex items-center justify-center">
-            <Bot className="w-4 h-4 text-accent-foreground" />
+          <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+            <img src={devanAvatraLogo} alt="Devan Avatra" className="w-8 h-8 object-cover" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold">AI Assistant</h3>
-            <p className="text-xs text-muted-foreground">Multi-Agent System Active</p>
+            <h3 className="font-semibold">Devan Avatra</h3>
+            <p className="text-xs text-muted-foreground">AI Assistance</p>
           </div>
           {!standalone && (
             <Button
@@ -170,8 +173,8 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
         {messages.map((message, index) => (
           <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
             {message.role === "ai" && (
-              <div className="w-8 h-8 gradient-accent rounded-full flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-accent-foreground" />
+              <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+                <img src={devanAvatraLogo} alt="Devan Avatra" className="w-8 h-8 object-cover" />
               </div>
             )}
             
@@ -226,7 +229,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
               )}
               
               <p className="text-xs text-muted-foreground mt-1">
-                {message.role === "ai" ? "Multi-Agent Response" : message.timestamp.toLocaleTimeString()}
+                {message.role === "ai" ? "Devan Avatra Response" : message.timestamp.toLocaleTimeString()}
               </p>
             </div>
 
@@ -240,13 +243,13 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
         
         {aiQueryMutation.isPending && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 gradient-accent rounded-full flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4 text-accent-foreground" />
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+              <img src={devanAvatraLogo} alt="Devan Avatra" className="w-8 h-8 object-cover" />
             </div>
             <div className="bg-muted p-3 rounded-lg">
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-accent"></div>
-                <span className="text-sm">AI agents are analyzing your query...</span>
+                <span className="text-sm">Devan Avatra is analyzing your query...</span>
               </div>
             </div>
           </div>
@@ -285,7 +288,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={`Ask about ${chapterId ? 'this chapter' : 'ancient history'}, or any concept...`}
+            placeholder={`Ask about ${chapterId ? 'this chapter' : 'Egyptian gods'}, mythology, or the divine chronicles...`}
             className="flex-1"
             disabled={aiQueryMutation.isPending}
             data-testid="input-ai-chat"
@@ -299,7 +302,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Press Enter to send • AI agents will analyze your question
+          Press Enter to send • Devan Avatra will analyze your question
         </p>
       </div>
     </div>
