@@ -702,8 +702,16 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
   }
 
   async createChapter(chapter: InsertBookChapter): Promise<BookChapter> {
-    this.chapters.set(chapter.id, chapter);
-    return chapter;
+    const bookChapter: BookChapter = {
+      ...chapter,
+      commentary: chapter.commentary || null,
+      figures: chapter.figures || [],
+      tags: chapter.tags || [],
+      timeSpan: chapter.timeSpan || null,
+      era: chapter.era || null
+    };
+    this.chapters.set(chapter.id, bookChapter);
+    return bookChapter;
   }
 
   // History operations
@@ -734,8 +742,13 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
   }
 
   async createHistoryEvent(event: InsertHistoryEvent): Promise<HistoryEvent> {
-    this.historyEvents.set(event.id, event);
-    return event;
+    const historyEvent: HistoryEvent = {
+      ...event,
+      tags: event.tags || [],
+      region: event.region || null
+    };
+    this.historyEvents.set(event.id, historyEvent);
+    return historyEvent;
   }
 
   async getHistoryTopics(): Promise<HistoryTopic[]> {
@@ -747,8 +760,14 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
   }
 
   async createHistoryTopic(topic: InsertHistoryTopic): Promise<HistoryTopic> {
-    this.historyTopics.set(topic.id, topic);
-    return topic;
+    const historyTopic: HistoryTopic = {
+      ...topic,
+      tags: topic.tags || [],
+      timeSpan: topic.timeSpan || null,
+      keyEvents: topic.keyEvents || []
+    };
+    this.historyTopics.set(topic.id, historyTopic);
+    return historyTopic;
   }
 
   // Practice operations
@@ -765,8 +784,13 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
   }
 
   async createPractice(practice: InsertPractice): Promise<Practice> {
-    this.practices.set(practice.id, practice);
-    return practice;
+    const practiceObj: Practice = {
+      ...practice,
+      tags: practice.tags || [],
+      origin: practice.origin || null
+    };
+    this.practices.set(practice.id, practiceObj);
+    return practiceObj;
   }
 
   // Chat operations
@@ -785,6 +809,9 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
     const chatSession: ChatSession = {
       ...session,
       id,
+      userId: session.userId || null,
+      chapterId: session.chapterId || null,
+      messages: session.messages || [],
       timestamp: new Date()
     };
     this.chatSessions.set(id, chatSession);
@@ -825,6 +852,10 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
       const newProgress: UserProgress = {
         ...progress,
         id,
+        userId: progress.userId || null,
+        chapterId: progress.chapterId || null,
+        completed: progress.completed || null,
+        progressPercent: progress.progressPercent || null,
         timestamp: new Date()
       };
       this.userProgress.set(id, newProgress);
@@ -844,6 +875,10 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
     const practiceSession: PracticeSession = {
       ...session,
       id,
+      userId: session.userId || null,
+      completed: session.completed || null,
+      practiceId: session.practiceId || null,
+      notes: session.notes || null,
       timestamp: new Date()
     };
     this.practiceSessions.set(id, practiceSession);
@@ -917,7 +952,6 @@ export class PostgresStorage implements IStorage {
 
   // History operations
   async getHistoryEvents(filters?: { era?: string; year?: number; tags?: string[] }): Promise<HistoryEvent[]> {
-    let query = this.db.select().from(historyEvents);
     const conditions = [];
 
     if (filters?.era) {
@@ -942,12 +976,16 @@ export class PostgresStorage implements IStorage {
       conditions.push(or(...tagConditions));
     }
 
+    // Build query directly without reassignment to avoid type issues
+    const baseQuery = this.db.select().from(historyEvents);
+    
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      // Match MemStorage behavior: order by year descending
+      return await baseQuery.where(and(...conditions)).orderBy(desc(historyEvents.year));
+    } else {
+      // Match MemStorage behavior: order by year descending
+      return await baseQuery.orderBy(desc(historyEvents.year));
     }
-
-    // Match MemStorage behavior: order by year descending
-    return await query.orderBy(desc(historyEvents.year));
   }
 
   async getHistoryEvent(id: string): Promise<HistoryEvent | undefined> {
