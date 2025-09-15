@@ -66,17 +66,29 @@ export const chatSessions = pgTable("chat_sessions", {
 export const userProgress = pgTable("user_progress", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id),
-  chapterId: varchar("chapter_id").references(() => bookChapters.id),
+  chapterId: varchar("chapter_id"), // Remove foreign key constraint to allow synthetic IDs for practices
   completed: boolean("completed").default(false),
   progressPercent: integer("progress_percent").default(0),
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
-// Insert schemas
+export const practiceSessions = pgTable("practice_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  practiceId: varchar("practice_id").references(() => practices.id),
+  duration: integer("duration").notNull(), // seconds actually practiced
+  completed: boolean("completed").default(false),
+  practiceType: text("practice_type").notNull(),
+  notes: text("notes"),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// Insert schemas - Allow id to be provided for server-side creation with Firebase UID
 export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  id: z.string().optional(), // Make id optional so it can be provided
 });
 
 export const insertBookChapterSchema = createInsertSchema(bookChapters);
@@ -93,6 +105,11 @@ export const insertChatSessionSchema = createInsertSchema(chatSessions).omit({
 });
 
 export const insertUserProgressSchema = createInsertSchema(userProgress).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertPracticeSessionSchema = createInsertSchema(practiceSessions).omit({
   id: true,
   timestamp: true,
 });
@@ -118,3 +135,6 @@ export type InsertChatSession = z.infer<typeof insertChatSessionSchema>;
 
 export type UserProgress = typeof userProgress.$inferSelect;
 export type InsertUserProgress = z.infer<typeof insertUserProgressSchema>;
+
+export type PracticeSession = typeof practiceSessions.$inferSelect;
+export type InsertPracticeSession = z.infer<typeof insertPracticeSessionSchema>;

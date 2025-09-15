@@ -13,13 +13,16 @@ import {
   type InsertChatSession,
   type UserProgress,
   type InsertUserProgress,
+  type PracticeSession,
+  type InsertPracticeSession,
   users,
   bookChapters,
   historyEvents,
   historyTopics,
   practices,
   chatSessions,
-  userProgress
+  userProgress,
+  practiceSessions
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { drizzle } from "drizzle-orm/neon-http";
@@ -62,6 +65,11 @@ export interface IStorage {
   getUserProgress(userId: string): Promise<UserProgress[]>;
   getUserChapterProgress(userId: string, chapterId: string): Promise<UserProgress | undefined>;
   createOrUpdateProgress(progress: InsertUserProgress): Promise<UserProgress>;
+
+  // Practice session operations
+  getPracticeSessions(userId: string): Promise<PracticeSession[]>;
+  createPracticeSession(session: InsertPracticeSession): Promise<PracticeSession>;
+  getUserPracticeStats(userId: string): Promise<{ totalSessions: number; totalDuration: number; completedSessions: number; }>;
 }
 
 export class MemStorage implements IStorage {
@@ -72,6 +80,7 @@ export class MemStorage implements IStorage {
   private practices: Map<string, Practice> = new Map();
   private chatSessions: Map<string, ChatSession> = new Map();
   private userProgress: Map<string, UserProgress> = new Map();
+  private practiceSessions: Map<string, PracticeSession> = new Map();
 
   constructor() {
     this.seedData();
@@ -536,6 +545,117 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
       tags: ["Amun", "Mut", "Mystery", "Mother", "Hidden", "Nurture"]
     };
     this.practices.set(hiddenMother.id, hiddenMother);
+
+    // Additional comprehensive practices inspired by Egyptian wisdom
+    const rasSunFlow: Practice = {
+      id: "ra_sun_flow",
+      type: "yoga",
+      title: "Ra's Journey - Solar Flow Yoga",
+      duration: 25,
+      instructions: "Embody Ra's daily journey across the sky through flowing movements. Begin with gentle stretches representing dawn, move through dynamic sun salutations for the midday sun, and conclude with restful poses as Ra descends into the underworld. Each movement honors the eternal cycle of renewal and the divine light within.\n\nFlow: Mountain Pose (dawn) → Sun Salutations × 5 (rising) → Warrior sequences (midday strength) → Seated forward folds (descent) → Savasana (underworld rest)",
+      origin: "Inspired by Ra, the Sun God from Egyptian mythology",
+      tags: ["Ra", "Sun", "Flow", "Cycle", "Renewal", "Light"]
+    };
+    this.practices.set(rasSunFlow.id, rasSunFlow);
+
+    const isisHealing: Practice = {
+      id: "isis_healing_breath",
+      type: "breathing",
+      title: "Isis Healing Breath - Divine Restoration",
+      duration: 10,
+      instructions: "Channel Isis, the great healer and protector, through restorative breathing. Place hands on heart, breathe in golden healing light, exhale any pain or tension. With each breath, invoke Isis's power to heal what has been broken, to restore what has been lost, and to protect what is precious. Feel her wings of compassion sheltering you.\n\nPractice: 4 counts in (golden light) → Hold 2 counts (healing) → 6 counts out (release) → Repeat for 15 cycles",
+      origin: "Inspired by Isis, Goddess of Magic and Healing",
+      tags: ["Isis", "Healing", "Protection", "Magic", "Restoration", "Breath"]
+    };
+    this.practices.set(isisHealing.id, isisHealing);
+
+    const thothWisdom: Practice = {
+      id: "thoth_wisdom_meditation",
+      type: "meditation",
+      title: "Thoth's Wisdom - Sacred Knowledge Meditation",
+      duration: 20,
+      instructions: "Sit with Thoth, the keeper of divine wisdom and recorder of truth. Quiet your mind and ask a question that has been troubling you. Listen deeply to the space between thoughts, where Thoth inscribes his wisdom. Feel the ibis-headed god guiding you toward understanding, helping you see truth beyond illusion.\n\nPhases: Centering (5 min) → Question holding (5 min) → Silent listening (8 min) → Integration (2 min)",
+      origin: "Based on Thoth, God of Wisdom and Writing",
+      tags: ["Thoth", "Wisdom", "Knowledge", "Truth", "Insight", "Contemplation"]
+    };
+    this.practices.set(thothWisdom.id, thothWisdom);
+
+    const anubisGuardian: Practice = {
+      id: "anubis_guardian_practice",
+      type: "meditation",
+      title: "Anubis Guardian - Shadow Integration",
+      duration: 15,
+      instructions: "Work with Anubis, the guardian of transitions and guide through death and rebirth. Acknowledge the parts of yourself you have buried or denied. With Anubis as your guide, descend into your personal underworld with courage. Face your shadows with compassion, knowing that Anubis protects all who journey with sincere hearts.\n\nJourney: Invocation → Shadow recognition → Guided descent → Integration → Return with wisdom",
+      origin: "Inspired by Anubis, Guardian of the Underworld",
+      tags: ["Anubis", "Shadow", "Integration", "Courage", "Transformation", "Guardian"]
+    };
+    this.practices.set(anubisGuardian.id, anubisGuardian);
+
+    const bastetJoy: Practice = {
+      id: "bastet_joy_movement",
+      type: "yoga",
+      title: "Bastet's Dance - Feline Flow of Joy",
+      duration: 12,
+      instructions: "Embody Bastet's playful, graceful energy through cat-inspired movements. Move with feline fluidity, stretching like a cat awakening, playing like a kitten, and resting in contentment. Let joy and sensuality flow through your body as you honor the sacred feminine power of pleasure and protection.\n\nFlow: Cat-Cow stretches → Playful movements → Tiger pose → Wild thing → Happy baby → Resting cat pose",
+      origin: "Inspired by Bastet, Goddess of Joy and Protection",
+      tags: ["Bastet", "Joy", "Playfulness", "Grace", "Feminine", "Movement"]
+    };
+    this.practices.set(bastetJoy.id, bastetJoy);
+
+    const maatBalance: Practice = {
+      id: "maat_balance_practice",
+      type: "yoga",
+      title: "Ma'at's Scales - Balance and Truth Asanas",
+      duration: 16,
+      instructions: "Practice with Ma'at, goddess of truth and justice, through balancing poses that align body and spirit. Each pose represents weighing your actions against the feather of truth. Stand in perfect balance, finding your moral and physical center, honoring the divine order that Ma'at represents.\n\nSequence: Tree poses → Warrior III → Eagle pose → Dancer's pose → Standing splits → Scales meditation",
+      origin: "Based on Ma'at, Goddess of Truth and Justice",
+      tags: ["Maat", "Balance", "Truth", "Justice", "Alignment", "Order"]
+    };
+    this.practices.set(maatBalance.id, maatBalance);
+
+    const ptahCreation: Practice = {
+      id: "ptah_creation_visualization",
+      type: "mindfulness",
+      title: "Ptah's Creation - Manifestation Meditation",
+      duration: 14,
+      instructions: "Join Ptah, the creator god, in the sacred act of manifestation through thought and word. Visualize something you wish to create in your life. Like Ptah speaking creation into existence, use your focused intention to give form to your vision. Feel the creative power flowing through you as you participate in the ongoing creation of reality.\n\nProcess: Centering → Vision formation → Energetic building → Spoken affirmation → Gratitude",
+      origin: "Inspired by Ptah, God of Craftsmen and Creation",
+      tags: ["Ptah", "Creation", "Manifestation", "Vision", "Intention", "Power"]
+    };
+    this.practices.set(ptahCreation.id, ptahCreation);
+
+    const horusVision: Practice = {
+      id: "horus_vision_quest",
+      type: "meditation",
+      title: "Eye of Horus - Inner Vision Quest",
+      duration: 22,
+      instructions: "Activate the Eye of Horus within you - the inner vision that sees beyond the physical realm. Focus on your third eye chakra and invite Horus to sharpen your spiritual sight. Journey into inner landscapes, seeking the wisdom and protection that comes from elevated perspective. See your life from the eagle's soaring viewpoint.\n\nPhases: Third eye activation → Ascending meditation → Vision seeking → Symbolic interpretation → Grounding wisdom",
+      origin: "Based on Horus, God of the Sky and Divine Vision",
+      tags: ["Horus", "Vision", "Third Eye", "Perspective", "Protection", "Insight"]
+    };
+    this.practices.set(horusVision.id, horusVision);
+
+    const nephthysCompassion: Practice = {
+      id: "nephthys_compassion_flow",
+      type: "meditation",
+      title: "Nephthys' Embrace - Compassionate Presence",
+      duration: 8,
+      instructions: "Rest in the compassionate presence of Nephthys, sister of Isis and guardian of the dying. Allow her gentle energy to hold space for your grief, your losses, your moments of transition. Practice deep self-compassion, extending the same loving kindness to yourself that Nephthys offers to all souls in their most vulnerable moments.\n\nPractice: Self-compassion meditation → Loving-kindness for past selves → Extending compassion to others → Resting in divine love",
+      origin: "Inspired by Nephthys, Goddess of Compassion and Transition",
+      tags: ["Nephthys", "Compassion", "Transition", "Gentleness", "Love", "Presence"]
+    };
+    this.practices.set(nephthysCompassion.id, nephthysCompassion);
+
+    const khepriRenewal: Practice = {
+      id: "khepri_renewal_practice",
+      type: "breathing",
+      title: "Khepri's Dawn - Renewal Breathing",
+      duration: 7,
+      instructions: "Welcome each new moment with Khepri, the scarab beetle god who rolls the sun across the sky each dawn. With each breath, push forward like the sacred beetle, transforming what seems like waste into new life. Every exhale releases the old, every inhale brings fresh possibility and the eternal promise of renewal.\n\nTechnique: Imagine rolling a golden orb with each breath cycle → 7 breaths for each phase of renewal → Complete 7 full cycles",
+      origin: "Based on Khepri, God of the Morning Sun and Renewal",
+      tags: ["Khepri", "Renewal", "Transformation", "Dawn", "Fresh Start", "Persistence"]
+    };
+    this.practices.set(khepriRenewal.id, khepriRenewal);
   }
 
   // User operations
@@ -548,7 +668,8 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
+    // Use provided ID (Firebase UID) or generate random UUID as fallback
+    const id = insertUser.id || randomUUID();
     const user: User = { 
       ...insertUser, 
       id,
@@ -710,6 +831,33 @@ Amun and Mut stood side by side, and in their union, creation felt the stirrings
       return newProgress;
     }
   }
+
+  // Practice session operations
+  async getPracticeSessions(userId: string): Promise<PracticeSession[]> {
+    return Array.from(this.practiceSessions.values())
+      .filter(session => session.userId === userId)
+      .sort((a, b) => new Date(b.timestamp!).getTime() - new Date(a.timestamp!).getTime());
+  }
+
+  async createPracticeSession(session: InsertPracticeSession): Promise<PracticeSession> {
+    const id = randomUUID();
+    const practiceSession: PracticeSession = {
+      ...session,
+      id,
+      timestamp: new Date()
+    };
+    this.practiceSessions.set(id, practiceSession);
+    return practiceSession;
+  }
+
+  async getUserPracticeStats(userId: string): Promise<{ totalSessions: number; totalDuration: number; completedSessions: number; }> {
+    const sessions = await this.getPracticeSessions(userId);
+    return {
+      totalSessions: sessions.length,
+      totalDuration: sessions.reduce((total, session) => total + session.duration, 0),
+      completedSessions: sessions.filter(session => session.completed).length
+    };
+  }
 }
 
 // PostgreSQL Storage Implementation
@@ -735,7 +883,12 @@ export class PostgresStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
-    const result = await this.db.insert(users).values(user).returning();
+    // Ensure we use provided ID (Firebase UID) if available
+    const userData = {
+      ...user,
+      id: user.id || undefined // Let database generate if no ID provided
+    };
+    const result = await this.db.insert(users).values(userData).returning();
     return result[0];
   }
 
@@ -890,6 +1043,28 @@ export class PostgresStorage implements IStorage {
       const result = await this.db.insert(userProgress).values(progress).returning();
       return result[0];
     }
+  }
+
+  // Practice session operations
+  async getPracticeSessions(userId: string): Promise<PracticeSession[]> {
+    return await this.db.select()
+      .from(practiceSessions)
+      .where(eq(practiceSessions.userId, userId))
+      .orderBy(desc(practiceSessions.timestamp));
+  }
+
+  async createPracticeSession(session: InsertPracticeSession): Promise<PracticeSession> {
+    const result = await this.db.insert(practiceSessions).values(session).returning();
+    return result[0];
+  }
+
+  async getUserPracticeStats(userId: string): Promise<{ totalSessions: number; totalDuration: number; completedSessions: number; }> {
+    const sessions = await this.getPracticeSessions(userId);
+    return {
+      totalSessions: sessions.length,
+      totalDuration: sessions.reduce((total, session) => total + session.duration, 0),
+      completedSessions: sessions.filter(session => session.completed).length
+    };
   }
 
   // Seeding function to populate database with initial data

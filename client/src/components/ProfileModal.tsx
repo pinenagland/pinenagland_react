@@ -19,7 +19,15 @@ import {
   Edit,
   Save,
   TrendingUp,
-  User
+  User,
+  Wind,
+  Clock,
+  Trophy,
+  Calendar,
+  Zap,
+  Eye,
+  Scale,
+  Moon
 } from "lucide-react";
 
 interface ProfileModalProps {
@@ -51,6 +59,17 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
     enabled: !!firebaseUser?.uid,
   });
 
+  // Fetch practice sessions and stats
+  const { data: practiceSessions } = useQuery({
+    queryKey: ["/api/practice-sessions"],
+    enabled: !!firebaseUser?.uid,
+  });
+
+  const { data: practiceStats } = useQuery({
+    queryKey: ["/api/practice-stats"],
+    enabled: !!firebaseUser?.uid,
+  });
+
   if (!firebaseUser) {
     return (
       <Dialog open onOpenChange={onClose}>
@@ -70,6 +89,64 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
   const totalChapters = 72; // Based on our book structure
 
   const progressPercent = (completedChapters / totalChapters) * 100;
+
+  // Practice statistics calculations
+  const totalSessions = practiceStats?.totalSessions || 0;
+  const totalPracticeTime = practiceStats?.totalDuration || 0; // in seconds
+  const completedSessions = practiceStats?.completedSessions || 0;
+
+  // Calculate streak (consecutive days with practice)
+  const calculateStreak = () => {
+    if (!Array.isArray(practiceSessions) || practiceSessions.length === 0) return 0;
+    
+    const sortedSessions = [...practiceSessions].sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    
+    let streak = 0;
+    let currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    
+    for (const session of sortedSessions) {
+      const sessionDate = new Date(session.timestamp);
+      sessionDate.setHours(0, 0, 0, 0);
+      
+      const daysDiff = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff === streak) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else if (daysDiff > streak) {
+        break;
+      }
+    }
+    
+    return streak;
+  };
+
+  const practiceStreak = calculateStreak();
+  const formatDuration = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
+  };
+
+  // Get recent practice types
+  const getRecentPracticeTypes = () => {
+    if (!Array.isArray(practiceSessions)) return [];
+    const recent = practiceSessions.slice(0, 10);
+    const types = [...new Set(recent.map((s: any) => s.practiceType))];
+    return types;
+  };
+
+  const practiceIcons = {
+    meditation: Wind,
+    yoga: Scale,
+    breathing: Wind,
+    mindfulness: Eye,
+    sleep: Moon,
+  };
 
   const updateUserMutation = useMutation({
     mutationFn: async (updates: any) => {
@@ -188,6 +265,107 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
                     <p className="text-xs text-muted-foreground">Questions answered this month</p>
                   </CardContent>
                 </Card>
+              </div>
+            </div>
+
+            {/* Practice Statistics */}
+            <div>
+              <h4 className="font-semibold mb-4 flex items-center gap-2">
+                <Wind className="w-5 h-5 text-purple-600" />
+                Ancient Practices
+              </h4>
+              
+              <div className="space-y-4">
+                {/* Overall Practice Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Trophy className="w-4 h-4 text-amber-500" />
+                        <span className="text-sm font-medium">Sessions</span>
+                      </div>
+                      <p className="text-2xl font-bold text-primary">{totalSessions}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {completedSessions} completed
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-4 h-4 text-green-500" />
+                        <span className="text-sm font-medium">Total Time</span>
+                      </div>
+                      <p className="text-2xl font-bold text-primary">
+                        {formatDuration(totalPracticeTime)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Practice time accumulated
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                {/* Practice Streak */}
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm font-medium">Current Streak</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Zap className="w-4 h-4 text-orange-500" />
+                        <span className="text-lg font-bold text-orange-600">
+                          {practiceStreak}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {practiceStreak > 0 ? 
+                        `${practiceStreak} consecutive day${practiceStreak > 1 ? 's' : ''} of practice` :
+                        "Start a practice to begin your streak"
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                {/* Recent Practice Types */}
+                {getRecentPracticeTypes().length > 0 && (
+                  <Card>
+                    <CardContent className="p-4">
+                      <h5 className="font-medium mb-3">Recent Practices</h5>
+                      <div className="flex gap-2 flex-wrap">
+                        {getRecentPracticeTypes().map((type: string) => {
+                          const Icon = practiceIcons[type as keyof typeof practiceIcons] || Wind;
+                          return (
+                            <div key={type} className="flex items-center gap-1.5 px-2 py-1 bg-muted rounded-full">
+                              <Icon className="w-3 h-3" />
+                              <span className="text-xs capitalize">{type}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* Practice Encouragement */}
+                {totalSessions === 0 && (
+                  <Card className="border-dashed border-purple-200">
+                    <CardContent className="p-4 text-center">
+                      <Wind className="w-8 h-8 text-purple-400 mx-auto mb-2" />
+                      <h5 className="font-medium text-purple-600 mb-1">Begin Your Practice Journey</h5>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Experience ancient Egyptian wisdom through meditation and movement
+                      </p>
+                      <Badge variant="outline" className="text-xs">
+                        12 practices available
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
 

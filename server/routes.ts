@@ -1,9 +1,32 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertChatSessionSchema, insertUserProgressSchema } from "@shared/schema";
+import { insertUserSchema, insertChatSessionSchema, insertUserProgressSchema, insertPracticeSessionSchema } from "@shared/schema";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { verifyFirebaseToken, optionalAuth } from "./middleware/auth";
+
+// Helper function to ensure user exists in database with Firebase UID
+async function ensureUserExists(firebaseUser: any) {
+  try {
+    let user = await storage.getUser(firebaseUser.uid);
+    
+    if (!user) {
+      // Auto-create user with Firebase UID as database ID
+      const userData = {
+        id: firebaseUser.uid,
+        name: firebaseUser.name || firebaseUser.email?.split('@')[0] || 'User',
+        email: firebaseUser.email || ''
+      };
+      user = await storage.createUser(userData);
+      console.log('Auto-created user:', user.id);
+    }
+    
+    return user;
+  } catch (error) {
+    console.error('Failed to ensure user exists:', error);
+    throw error;
+  }
+}
 
 // Validate API key at startup
 if (!process.env.GEMINI_API_KEY) {
@@ -155,6 +178,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Practice session routes
+  app.get("/api/practice-sessions", verifyFirebaseToken, async (req, res) => {
+    try {
+      const sessions = await storage.getPracticeSessions(req.user!.uid);
+      res.json(sessions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get practice sessions" });
+    }
+  });
+
+  app.post("/api/practice-sessions", verifyFirebaseToken, async (req, res) => {
+    try {
+      // Ensure user exists in database before creating session
+      await ensureUserExists(req.user!);
+      
+      const sessionData = {
+        ...req.body,
+        userId: req.user!.uid
+      };
+      
+      const validatedData = insertPracticeSessionSchema.parse(sessionData);
+      const session = await storage.createPracticeSession(validatedData);
+      res.json(session);
+    } catch (error) {
+      console.error('Create practice session error:', error);
+      res.status(400).json({ message: "Invalid session data" });
+    }
+  });
+
+  app.get("/api/practice-stats", verifyFirebaseToken, async (req, res) => {
+    try {
+      const stats = await storage.getUserPracticeStats(req.user!.uid);
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get practice stats" });
+    }
+  });
+
   // Chat and AI routes
   app.post("/api/chat/sessions", verifyFirebaseToken, async (req, res) => {
     try {
@@ -255,6 +316,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/progress", verifyFirebaseToken, async (req, res) => {
     try {
+      // Ensure user exists in database before creating progress
+      await ensureUserExists(req.user!);
+      
       // Use verified user ID from token
       const progressData = {
         ...req.body,
