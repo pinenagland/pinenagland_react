@@ -11,7 +11,7 @@ export default function Layout() {
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [showMeditationModal, setShowMeditationModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [currentChapter, setCurrentChapter] = useState("ch_41");
+  const [currentChapter, setCurrentChapter] = useState("prologue");
 
   const handleNavigation = (view: string) => {
     switch (view) {
