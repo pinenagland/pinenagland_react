@@ -5,16 +5,21 @@ import AIAssistant from "./AIAssistant";
 import TimelineExplorer from "./TimelineExplorer";
 import MeditationModule from "./MeditationModule";
 import ProfileModal from "./ProfileModal";
+import CharacterGallery from "./CharacterGallery";
 
 export default function Layout() {
   const [currentView, setCurrentView] = useState("book");
   const [showTimelineModal, setShowTimelineModal] = useState(false);
   const [showMeditationModal, setShowMeditationModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showCharacterGallery, setShowCharacterGallery] = useState(false);
   const [currentChapter, setCurrentChapter] = useState("prologue");
 
   const handleNavigation = (view: string) => {
     switch (view) {
+      case "characters":
+        setShowCharacterGallery(true);
+        break;
       case "timeline":
         setShowTimelineModal(true);
         break;
@@ -58,6 +63,10 @@ export default function Layout() {
       </main>
 
       {/* Modals */}
+      {showCharacterGallery && (
+        <CharacterGallery onClose={() => setShowCharacterGallery(false)} />
+      )}
+      
       {showTimelineModal && (
         <TimelineExplorer onClose={() => setShowTimelineModal(false)} />
       )}

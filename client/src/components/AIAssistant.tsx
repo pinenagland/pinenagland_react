@@ -154,19 +154,11 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
           )}
         </div>
         
-        {/* Agent Status Indicators */}
-        <div className="flex gap-2 mt-3 flex-wrap">
+        {/* Fact-Checker Status Indicator */}
+        <div className="flex gap-2 mt-3">
           <Badge variant="outline" className="bg-wellness/10 text-wellness border-wellness/20">
             <div className="w-2 h-2 bg-wellness rounded-full mr-1"></div>
-            Fact-Checker
-          </Badge>
-          <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
-            <div className="w-2 h-2 bg-accent rounded-full mr-1"></div>
-            Reasoner
-          </Badge>
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-            <div className="w-2 h-2 bg-primary rounded-full mr-1"></div>
-            Narrator
+            Historical Fact-Checker
           </Badge>
         </div>
       </CardHeader>
@@ -190,44 +182,30 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
                 <p className="text-sm">{message.content}</p>
               </div>
               
-              {/* Agent breakdown for AI responses */}
-              {message.role === "ai" && message.agents && (
-                <div className="mt-2 space-y-2">
-                  {message.agents.factChecker && (
-                    <div className="text-xs">
-                      <div className="flex items-center gap-1 text-wellness font-medium mb-1">
-                        <CheckCircle className="w-3 h-3" />
-                        Fact-Checker Results
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        Confidence: {message.agents.factChecker.confidence_level || "medium"}
-                      </p>
+              {/* Fact-Checker Results */}
+              {message.role === "ai" && message.agents?.factChecker && (
+                <div className="mt-2">
+                  <div className="text-xs">
+                    <div className="flex items-center gap-1 text-wellness font-medium mb-1">
+                      <CheckCircle className="w-3 h-3" />
+                      Historical Fact-Check
                     </div>
-                  )}
-                  
-                  {message.agents.reasoner && (
-                    <div className="text-xs">
-                      <div className="flex items-center gap-1 text-accent font-medium mb-1">
-                        <Brain className="w-3 h-3" />
-                        Reasoning Analysis
-                      </div>
+                    <div className="space-y-1">
                       <p className="text-muted-foreground text-xs">
-                        {message.agents.reasoner.key_concepts?.slice(0, 2).join(", ") || "Analyzed"}
+                        Confidence: <span className="font-medium">{message.agents.factChecker.confidence_level || "medium"}</span>
                       </p>
+                      {message.agents.factChecker.sources && message.agents.factChecker.sources.length > 0 && (
+                        <p className="text-muted-foreground text-xs">
+                          Sources: {message.agents.factChecker.sources.slice(0, 2).join(", ")}
+                        </p>
+                      )}
+                      {message.agents.factChecker.verified_facts && message.agents.factChecker.verified_facts.length > 0 && (
+                        <p className="text-muted-foreground text-xs">
+                          Verified: {message.agents.factChecker.verified_facts.slice(0, 1).join(", ")}
+                        </p>
+                      )}
                     </div>
-                  )}
-                  
-                  {message.agents.narrator && (
-                    <div className="text-xs">
-                      <div className="flex items-center gap-1 text-primary font-medium mb-1">
-                        <Scroll className="w-3 h-3" />
-                        Narrative Context
-                      </div>
-                      <p className="text-muted-foreground text-xs">
-                        {message.agents.narrator.modern_relevance?.slice(0, 50) || "Contextual narrative"}...
-                      </p>
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
               
@@ -305,7 +283,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Press Enter to send • Devan Avatra will analyze your question
+          Press Enter to send • Devan Avatra will fact-check your question
         </p>
       </div>
     </div>

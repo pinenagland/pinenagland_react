@@ -13,6 +13,7 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
   const { firebaseUser, dbUser, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const navigationItems = [
+    { id: "characters", label: "Character Gallery", icon: Eye },
     { id: "book", label: "Book Reader", icon: BookOpen },
     { id: "chat", label: "Devan Avatra", icon: MessageCircle },
     { id: "timeline", label: "History Explorer", icon: History },
@@ -22,15 +23,11 @@ export default function Sidebar({ currentView, onNavigate }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-card border-r border-border flex flex-col">
-      {/* Logo and Title */}
+      {/* Logo Only */}
       <div className="p-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg overflow-hidden flex items-center justify-center">
-            <img src={devanAvatraLogo} alt="Devan Avatra" className="w-10 h-10 object-cover" />
-          </div>
-          <div>
-            <h1 className="font-serif font-semibold text-lg">The Weavers of Eternity</h1>
-            <p className="text-muted-foreground text-sm">Chronicle of Egyptian Gods</p>
+        <div className="flex items-center justify-center">
+          <div className="w-16 h-16 rounded-lg overflow-hidden flex items-center justify-center">
+            <img src={devanAvatraLogo} alt="Devan Avatra" className="w-16 h-16 object-cover" />
           </div>
         </div>
       </div>

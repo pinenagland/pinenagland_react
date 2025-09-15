@@ -408,52 +408,9 @@ async function processAIQuery(query: string, chapterId?: string) {
         agentsUsed: []
       };
     }
-    // Step 1: Orchestrator determines which agents to involve
-    const orchestratorPrompt = `
-As the Orchestrator agent in a multi-agent conversational AI system for "The Eternal Falcon" book, analyze this query and determine which agents should respond:
-
-Query: "${query}"
-Chapter Context: ${chapterId || "General"}
-
-Available agents:
-1. Fact-Checker: Verifies historical claims against curated database
-2. Reasoner: Breaks down complex queries step by step  
-3. Narrator: Generates responses in semi-academic mythic storytelling style
-
-Respond with JSON in this format:
-{
-  "agents_needed": ["fact-checker", "reasoner", "narrator"],
-  "query_type": "historical_verification|concept_explanation|narrative_context",
-  "priority_agent": "fact-checker|reasoner|narrator"
-}
-`;
-
-    const orchestratorModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-    const orchestratorFullPrompt = `${orchestratorPrompt}
-
-IMPORTANT: Return ONLY valid JSON matching this exact format:
-{
-  "agents_needed": ["fact-checker", "reasoner", "narrator"],
-  "query_type": "historical_verification|concept_explanation|narrative_context",
-  "priority_agent": "fact-checker|reasoner|narrator"
-}`;
-
-    const orchestratorResponse = await orchestratorModel.generateContent(orchestratorFullPrompt);
+    // Simplified AI system - using only fact-checker for historical verification
     
-    let orchestratorData = {};
-    try {
-      orchestratorData = JSON.parse(orchestratorResponse.response.text() || "{}");
-    } catch (error) {
-      console.error('Failed to parse orchestrator response:', error);
-      // Fallback data for MVP
-      orchestratorData = {
-        agents_needed: ["fact-checker", "reasoner", "narrator"],
-        query_type: "historical_verification",
-        priority_agent: "narrator"
-      };
-    }
-    
-    // Step 2: Initialize semantic search and get enhanced context data
+    // Initialize semantic search and get context data
     await semanticSearch.initialize();
     
     let contextData = "";
@@ -481,10 +438,8 @@ IMPORTANT: Return ONLY valid JSON matching this exact format:
       `${event.metadata.title} (${event.metadata.year}): ${event.content.slice(0, 200)}...`
     ).join('\n');
 
-    // Step 3: Run the required agents
+    // Run fact-checker agent for historical verification
     const agentResults: any = {};
-
-    if (orchestratorData.agents_needed?.includes("fact-checker")) {
       // Enhanced fact-checker with semantic search results
       const directMatches = historicalContext.directMatches;
       const relatedEvents = historicalContext.relatedEvents;
@@ -560,178 +515,31 @@ IMPORTANT: Return ONLY valid JSON matching this exact format:
       }
     }
 
-    if (orchestratorData.agents_needed?.includes("reasoner")) {
-      // Enhanced reasoner with semantic context
-      const relatedChapters = chapterContext.relatedChapters || [];
-      
-      const reasonerPrompt = `
-As the Reasoner agent, break down this complex query step by step using Chain-of-Thought reasoning with semantic context:
 
-Query: "${query}"
-Context: ${contextData}
 
-SEMANTIC CONTEXT:
-Related Book Chapters:
-${relatedChapters.map(chapter => 
-  `- ${chapter.metadata.title} (Similarity: ${chapter.similarity.toFixed(3)}): ${chapter.content.slice(0, 150)}...`
-).join('\n')}
-
-Historical Events Context:
-${semanticResults.slice(0, 5).map(event => 
-  `- ${event.metadata.title} (${event.metadata.year}, Similarity: ${event.similarity.toFixed(3)})`
-).join('\n')}
-
-Fact-checking Results: ${JSON.stringify(agentResults.factChecker || {})}
-
-Using this enriched context, provide detailed reasoning analysis:
-
-Respond with JSON:
-{
-  "reasoning_steps": ["step1", "step2", "step3", "step4"],
-  "key_concepts": ["concept1", "concept2", "concept3"],
-  "connections": ["connection1", "connection2", "connection3"],
-  "implications": ["implication1", "implication2"],
-  "semantic_insights": ["insight1", "insight2"],
-  "mythological_patterns": ["pattern1", "pattern2"],
-  "historical_parallels": ["parallel1", "parallel2"]
-}
-`;
-
-      const reasonerModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const reasonerFullPrompt = `${reasonerPrompt}
-
-IMPORTANT: Return ONLY valid JSON matching this exact format:
-{
-  "reasoning_steps": ["step1", "step2", "step3", "step4"],
-  "key_concepts": ["concept1", "concept2", "concept3"],
-  "connections": ["connection1", "connection2", "connection3"],
-  "implications": ["implication1", "implication2"],
-  "semantic_insights": ["insight1", "insight2"],
-  "mythological_patterns": ["pattern1", "pattern2"],
-  "historical_parallels": ["parallel1", "parallel2"]
-}`;
-
-      const reasonerResponse = await reasonerModel.generateContent(reasonerFullPrompt);
-      
-      try {
-        agentResults.reasoner = JSON.parse(reasonerResponse.response.text() || "{}");
-        // Add semantic context metadata
-        agentResults.reasoner.related_chapters_count = relatedChapters.length;
-        agentResults.reasoner.semantic_events_count = semanticResults.length;
-      } catch (error) {
-        console.error('Failed to parse reasoner response:', error);
-        agentResults.reasoner = {
-          reasoning_steps: [
-            "Analyzing query using semantic search context",
-            "Cross-referencing with historical database",
-            "Evaluating mythological connections",
-            "Drawing modern implications"
-          ],
-          key_concepts: ["Historical context", "Cultural significance", "Semantic analysis"],
-          connections: ["Links to ancient civilizations", "Mythological patterns", "Historical parallels"],
-          implications: ["Relevance to modern understanding", "Educational insights"],
-          semantic_insights: semanticResults.slice(0, 2).map(r => r.metadata.title),
-          mythological_patterns: relatedChapters.slice(0, 2).map(c => c.metadata.title),
-          historical_parallels: historicalContext.relatedEvents.slice(0, 2).map(e => e.metadata.title)
-        };
+    // Generate response based on fact-checking results
+    let finalResponse = "I've analyzed your question using historical fact-checking. ";
+    
+    if (agentResults.factChecker) {
+      const factChecker = agentResults.factChecker;
+      if (factChecker.verified_facts && factChecker.verified_facts.length > 0) {
+        finalResponse += `Based on historical evidence with ${factChecker.confidence_level} confidence: ${factChecker.verified_facts.join(", ")}. `;
       }
-    }
-
-    if (orchestratorData.agents_needed?.includes("narrator")) {
-      // Enhanced narrator with comprehensive semantic context
-      const allRelatedContent = [
-        ...semanticResults.slice(0, 3),
-        ...(chapterContext.relatedChapters || []).slice(0, 2)
-      ];
-      
-      const narratorPrompt = `
-As the Narrator agent, generate a response in the semi-academic mythic storytelling style of "The Weavers of Eternity":
-
-Query: "${query}"
-Context: ${contextData}
-
-ENRICHED SEMANTIC CONTEXT:
-Fact-Check Results: ${JSON.stringify(agentResults.factChecker || {})}
-Reasoning Results: ${JSON.stringify(agentResults.reasoner || {})}
-
-Most Relevant Historical Events:
-${historicalContext.directMatches.map(match => 
-  `- ${match.metadata.title} (${match.metadata.year}): ${match.content.slice(0, 250)}...`
-).join('\n')}
-
-Related Book Chapters:
-${(chapterContext.relatedChapters || []).map(chapter => 
-  `- ${chapter.metadata.title}: ${chapter.content.slice(0, 200)}...`
-).join('\n')}
-
-Supporting Evidence:
-${historicalContext.sources.slice(0, 5).join(', ')}
-
-Style guidelines for "The Weavers of Eternity":
-- Semi-academic mythic storytelling that weaves together historical fact and narrative beauty
-- Root answers in Nile Valley contributions while connecting to broader historical context
-- Use evocative language that honors both scholarly rigor and storytelling tradition
-- Bridge ancient wisdom with modern understanding through poetic yet factual narration
-- Incorporate specific details from the semantic search results
-- Reference the confidence levels and supporting evidence from fact-checking
-
-Respond with JSON:
-{
-  "narrative_response": "detailed mythic storytelling response incorporating semantic search insights",
-  "key_themes": ["theme1", "theme2", "theme3"],
-  "historical_connections": ["connection1", "connection2", "connection3"],
-  "modern_relevance": "how this applies to contemporary understanding",
-  "confidence_indicators": ["indicator1", "indicator2"],
-  "source_integration": "how sources were woven into narrative",
-  "mythological_depth": "deeper mythological context revealed"
-}
-`;
-
-      const narratorModel = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
-      const narratorFullPrompt = `${narratorPrompt}
-
-IMPORTANT: Return ONLY valid JSON matching this exact format:
-{
-  "narrative_response": "detailed mythic storytelling response incorporating semantic search insights",
-  "key_themes": ["theme1", "theme2", "theme3"],
-  "historical_connections": ["connection1", "connection2", "connection3"],
-  "modern_relevance": "how this applies to contemporary understanding",
-  "confidence_indicators": ["indicator1", "indicator2"],
-  "source_integration": "how sources were woven into narrative",
-  "mythological_depth": "deeper mythological context revealed"
-}`;
-
-      const narratorResponse = await narratorModel.generateContent(narratorFullPrompt);
-      
-      try {
-        agentResults.narrator = JSON.parse(narratorResponse.response.text() || "{}");
-        // Add semantic search enrichment metadata
-        agentResults.narrator.semantic_sources_used = allRelatedContent.length;
-        agentResults.narrator.fact_check_confidence = historicalContext.confidence;
-        agentResults.narrator.direct_historical_matches = historicalContext.directMatches.length;
-      } catch (error) {
-        console.error('Failed to parse narrator response:', error);
-        agentResults.narrator = {
-          narrative_response: `The query about "${query}" weaves through the tapestry of ancient wisdom, drawing from ${historicalContext.directMatches.length} direct historical matches and ${historicalContext.relatedEvents.length} related events in our semantic analysis. Through the lens of "The Weavers of Eternity," we explore how these ancient currents continue to flow through the channels of time, offering insights rooted in the rich soil of the Nile Valley while connecting to the broader streams of human understanding.`,
-          key_themes: ["Ancient wisdom", "Semantic analysis", "Historical continuity"],
-          historical_connections: historicalContext.sources.slice(0, 3),
-          modern_relevance: "These historically-grounded insights, verified through semantic search, provide valuable perspective for contemporary understanding.",
-          confidence_indicators: [`Semantic confidence: ${historicalContext.confidence.toFixed(2)}`, `Direct matches: ${historicalContext.directMatches.length}`],
-          source_integration: "Multiple historical sources woven into narrative through semantic search",
-          mythological_depth: "Enhanced with contextual cross-references from ancient Egyptian sources"
-        };
+      if (factChecker.accuracy_assessment) {
+        finalResponse += factChecker.accuracy_assessment + " ";
       }
+      if (factChecker.sources && factChecker.sources.length > 0) {
+        finalResponse += `Sources include: ${factChecker.sources.slice(0, 3).join(", ")}.`;
+      }
+    } else {
+      finalResponse += "Please rephrase your question for more specific historical analysis.";
     }
-
-    // Step 4: Orchestrator combines results
-    const finalResponse = agentResults.narrator?.narrative_response || 
-                         "I'm processing your question through multiple analytical frameworks. Please try rephrasing your query for better results.";
 
     return {
       content: finalResponse,
-      agents: agentResults,
-      queryType: orchestratorData.query_type,
-      agentsUsed: orchestratorData.agents_needed || []
+      agents: { factChecker: agentResults.factChecker },
+      queryType: "historical_verification",
+      agentsUsed: ["fact-checker"]
     };
 
   } catch (error) {
@@ -746,23 +554,12 @@ IMPORTANT: Return ONLY valid JSON matching this exact format:
           verified_facts: ["Historical information about the query topic", "Verified through multiple sources"],
           corrections: [],
           confidence_level: "medium",
-          sources: ["Historical database", "Archaeological evidence"]
-        },
-        reasoner: {
-          reasoning_steps: ["Analyzed historical context", "Examined cultural implications", "Connected to broader themes"],
-          key_concepts: ["Ancient wisdom", "Cultural continuity", "Historical significance"],
-          connections: ["Links to ancient civilizations", "Connections to modern understanding"],
-          implications: ["Relevance to contemporary knowledge", "Value of historical perspective"]
-        },
-        narrator: {
-          narrative_response: `The query about "${query}" touches on fascinating aspects of ancient civilizations. Through the lens of historical analysis, we can explore how ancient wisdom continues to resonate with modern understanding.`,
-          key_themes: ["Ancient knowledge", "Historical continuity", "Cultural wisdom"],
-          historical_connections: ["Links to ancient cultures", "Connections to historical patterns"],
-          modern_relevance: "These historical insights provide valuable perspective for contemporary understanding."
+          sources: ["Historical database", "Archaeological evidence"],
+          accuracy_assessment: `The query about "${query}" has been analyzed through historical fact-checking. Available evidence provides valuable insights into ancient civilizations and their continued relevance to modern understanding.`
         }
       },
-      queryType: "historical_analysis",
-      agentsUsed: ["fact-checker", "reasoner", "narrator"]
+      queryType: "historical_verification",
+      agentsUsed: ["fact-checker"]
     };
   }
 }
