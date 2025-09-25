@@ -17,6 +17,7 @@ export default function Layout() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCharacterGallery, setShowCharacterGallery] = useState(false);
   const [currentChapter, setCurrentChapter] = useState("prologue");
+  const [selectedBookId, setSelectedBookId] = useState("weavers_of_eternity"); // Default to Egyptian mythology book
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -44,6 +45,8 @@ export default function Layout() {
       <Sidebar 
         currentView={currentView} 
         onNavigate={handleNavigation}
+        selectedBookId={selectedBookId}
+        onBookSelect={setSelectedBookId}
         isOpen={isMobile ? sidebarOpen : true}
         onClose={() => setSidebarOpen(false)}
       />
@@ -70,6 +73,7 @@ export default function Layout() {
             <BookReader 
               chapterId={currentChapter}
               onChapterChange={setCurrentChapter}
+              bookId={selectedBookId}
             />
             <AIAssistant chapterId={currentChapter} />
           </div>

@@ -3,17 +3,20 @@ import devanAvatraLogo from "@/assets/devan-avatra-logo.jpg";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import AuthModal from "@/components/auth/AuthModal";
+import BookSelector from "@/components/BookSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   currentView: string;
   onNavigate: (view: string) => void;
+  selectedBookId?: string;
+  onBookSelect?: (bookId: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export default function Sidebar({ currentView, onNavigate, isOpen = true, onClose }: SidebarProps) {
+export default function Sidebar({ currentView, onNavigate, selectedBookId, onBookSelect, isOpen = true, onClose }: SidebarProps) {
   const { firebaseUser, dbUser, logout } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const isMobile = useIsMobile();
@@ -73,6 +76,14 @@ export default function Sidebar({ currentView, onNavigate, isOpen = true, onClos
           </div>
         </div>
       </div>
+
+      {/* Book Selection */}
+      {onBookSelect && (
+        <BookSelector 
+          selectedBookId={selectedBookId}
+          onBookSelect={onBookSelect}
+        />
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">

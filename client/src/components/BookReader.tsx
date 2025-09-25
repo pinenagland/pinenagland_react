@@ -19,9 +19,10 @@ import type { BookChapter } from "@shared/schema";
 interface BookReaderProps {
   chapterId: string;
   onChapterChange: (chapterId: string) => void;
+  bookId?: string;
 }
 
-export default function BookReader({ chapterId, onChapterChange }: BookReaderProps) {
+export default function BookReader({ chapterId, onChapterChange, bookId }: BookReaderProps) {
   const [fontSize, setFontSize] = useState("text-lg");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
@@ -40,7 +41,10 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
   });
 
   const { data: allChapters } = useQuery<BookChapter[]>({
-    queryKey: ["/api/chapters"],
+    queryKey: bookId ? ["/api/books", bookId, "chapters"] : ["/api/chapters"],
+    queryFn: bookId 
+      ? () => fetch(`/api/books/${bookId}/chapters`).then(res => res.json())
+      : undefined
   });
 
   if (isLoading) {
