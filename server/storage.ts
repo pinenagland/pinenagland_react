@@ -1,6 +1,8 @@
 import { 
   type User, 
   type InsertUser, 
+  type Book,
+  type InsertBook,
   type BookChapter, 
   type InsertBookChapter,
   type HistoryEvent,
@@ -18,6 +20,7 @@ import {
   type Deity,
   type InsertDeity,
   users,
+  books,
   bookChapters,
   historyEvents,
   historyTopics,
@@ -40,8 +43,14 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
 
   // Book operations
+  getBook(id: string): Promise<Book | undefined>;
+  getAllBooks(): Promise<Book[]>;
+  createBook(book: InsertBook): Promise<Book>;
+
+  // Chapter operations
   getChapter(id: string): Promise<BookChapter | undefined>;
   getAllChapters(): Promise<BookChapter[]>;
+  getChaptersByBook(bookId: string): Promise<BookChapter[]>;
   createChapter(chapter: InsertBookChapter): Promise<BookChapter>;
 
   // History operations
@@ -83,6 +92,7 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
+  private books: Map<string, Book> = new Map();
   private chapters: Map<string, BookChapter> = new Map();
   private historyEvents: Map<string, HistoryEvent> = new Map();
   private historyTopics: Map<string, HistoryTopic> = new Map();
@@ -97,12 +107,27 @@ export class MemStorage implements IStorage {
   }
 
   private seedData() {
+    // First, seed the Egyptian Mythology book
+    const egyptianBook: Book = {
+      id: "weavers_of_eternity",
+      title: "The Weavers of Eternity: A Chronicle of the Egyptian Gods",
+      author: "The Eternal Falcon",
+      description: "An immersive journey through Egyptian mythology, weaving together the stories of gods, creation, and eternal wisdom. This chronicle traces the divine pantheon from primordial chaos to the established order of the cosmos.",
+      coverImage: "https://images.unsplash.com/photo-1539650116574-75c0c6d73ab2",
+      genre: "Mythology",
+      totalChapters: 72,
+      tags: ["Egyptian Mythology", "Gods", "Creation", "Ancient Wisdom", "Spirituality"],
+      createdAt: new Date(),
+    };
+    this.books.set(egyptianBook.id, egyptianBook);
+
     // Seed book chapters from "The Weavers of Eternity: A Chronicle of the Egyptian Gods"
     // Complete 72-chapter chronicle organized by Parts I-VII
     
     // Prologue
     const prologue: BookChapter = {
       id: "prologue",
+      bookId: "weavers_of_eternity",
       title: "The Silence Before All",
       chapterNumber: 0,
       narrative: `Before the first dawn, before the river sang, before sand and star were named, there was silence. Not the silence of sleep, nor the silence after death, but the silence of a world unborn. There was no earth, no sky, no air. Only a vast and endless sea of shadowed waters stretched into eternity. This was Nu, the limitless expanse, the boundless nothingness from which all would rise.`,
@@ -119,6 +144,7 @@ export class MemStorage implements IStorage {
     // Chapter 1 - Nu
     const chapter1: BookChapter = {
       id: "ch_1",
+      bookId: "weavers_of_eternity",
       title: "Nu – The Infinite Waters",
       chapterNumber: 1,
       narrative: `Nu was not god in the way others would be – with temples and names sung in hymns – but rather the canvas upon which existence would be painted. He was the dark water, the eternal tide, the father of beginnings and the grave of endings. Yet even Nu, vast and unending, felt the ache of loneliness. From his depths came the first companions – shapes born from his essence.`,
@@ -133,6 +159,7 @@ export class MemStorage implements IStorage {
     // Chapter 2 - Kek & Heh
     const chapter2: BookChapter = {
       id: "ch_2",
+      bookId: "weavers_of_eternity",
       title: "Kek & Heh – Shadows and Infinity",
       chapterNumber: 2,
       narrative: `From the still waters of Nu, shapes began to stir. The first was Kek, the god of shadow, cloaked in eternal dusk. Beside him rose Heh, the god of infinity, vast and unending. Together, they drifted through Nu's waters, shaping balance – the limits and the limitless, the night and the eternal expanse.`,
@@ -147,6 +174,7 @@ export class MemStorage implements IStorage {
     // Chapter 3 - Amun & Mut
     const chapter3: BookChapter = {
       id: "ch_3",
+      bookId: "weavers_of_eternity",
       title: "Amun & Mut – The Hidden and the Mother",
       chapterNumber: 3,
       narrative: `From the waters of Nu came Amun, the Hidden One – unseen, unknowable, unfathomable. He was not shadow, nor light, nor sky, nor earth – but something between. Beside him rose Mut, the Mother, vast yet gentle, her embrace wide enough to hold worlds not yet born. Together they stood, and in their union, creation felt the stirrings of order.`,
@@ -161,6 +189,7 @@ export class MemStorage implements IStorage {
     // Chapter 4 - Tatenen
     const chapter4: BookChapter = {
       id: "ch_4",
+      bookId: "weavers_of_eternity",
       title: "Tatenen – The Risen Land",
       chapterNumber: 4,
       narrative: `From the deep rose a mound, a swelling of earth breaking the surface of chaos. Upon this sacred mound stood Tatenen – the risen land, the father of soil, mountains, and valleys. He rose high above the waters, green and fertile, crowned with the lotus of creation.`,
@@ -175,6 +204,7 @@ export class MemStorage implements IStorage {
     // Chapter 5 - Khonsu
     const chapter5: BookChapter = {
       id: "ch_5",
+      bookId: "weavers_of_eternity",
       title: "Khonsu – Timekeeper of the Moon",
       chapterNumber: 5,
       narrative: `From the union of Amun and Mut, a child of silver light emerged – Khonsu, the Moon. He rose quietly, with soft glow that shimmered across the waters. His crown bore the lunar disk embraced by a crescent. With him, time began to move – days into nights, nights into days.`,
@@ -1197,12 +1227,37 @@ export class MemStorage implements IStorage {
   }
 
   // Book operations
+  async getBook(id: string): Promise<Book | undefined> {
+    return this.books.get(id);
+  }
+
+  async getAllBooks(): Promise<Book[]> {
+    return Array.from(this.books.values()).sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  async createBook(book: InsertBook): Promise<Book> {
+    const newBook: Book = {
+      ...book,
+      coverImage: book.coverImage || null,
+      createdAt: new Date(),
+    };
+    this.books.set(book.id, newBook);
+    return newBook;
+  }
+
+  // Chapter operations
   async getChapter(id: string): Promise<BookChapter | undefined> {
     return this.chapters.get(id);
   }
 
   async getAllChapters(): Promise<BookChapter[]> {
     return Array.from(this.chapters.values()).sort((a, b) => a.chapterNumber - b.chapterNumber);
+  }
+
+  async getChaptersByBook(bookId: string): Promise<BookChapter[]> {
+    return Array.from(this.chapters.values())
+      .filter(chapter => chapter.bookId === bookId)
+      .sort((a, b) => a.chapterNumber - b.chapterNumber);
   }
 
   async createChapter(chapter: InsertBookChapter): Promise<BookChapter> {
@@ -1477,6 +1532,21 @@ export class PostgresStorage implements IStorage {
   }
 
   // Book operations
+  async getBook(id: string): Promise<Book | undefined> {
+    const result = await this.db.select().from(books).where(eq(books.id, id));
+    return result[0];
+  }
+
+  async getAllBooks(): Promise<Book[]> {
+    return await this.db.select().from(books).orderBy(books.title);
+  }
+
+  async createBook(book: InsertBook): Promise<Book> {
+    const result = await this.db.insert(books).values(book).returning();
+    return result[0];
+  }
+
+  // Chapter operations
   async getChapter(id: string): Promise<BookChapter | undefined> {
     const result = await this.db.select().from(bookChapters).where(eq(bookChapters.id, id));
     return result[0];
@@ -1484,6 +1554,12 @@ export class PostgresStorage implements IStorage {
 
   async getAllChapters(): Promise<BookChapter[]> {
     return await this.db.select().from(bookChapters).orderBy(bookChapters.chapterNumber);
+  }
+
+  async getChaptersByBook(bookId: string): Promise<BookChapter[]> {
+    return await this.db.select().from(bookChapters)
+      .where(eq(bookChapters.bookId, bookId))
+      .orderBy(bookChapters.chapterNumber);
   }
 
   async createChapter(chapter: InsertBookChapter): Promise<BookChapter> {
@@ -1685,9 +1761,22 @@ export class PostgresStorage implements IStorage {
 
     console.log("Seeding database with initial data...");
 
+    // First, create the book
+    await this.createBook({
+      id: "weavers_of_eternity",
+      title: "The Weavers of Eternity: A Chronicle of the Egyptian Gods",
+      author: "The Eternal Falcon",
+      description: "An immersive journey through Egyptian mythology, weaving together the stories of gods, creation, and eternal wisdom. This chronicle traces the divine pantheon from primordial chaos to the established order of the cosmos.",
+      coverImage: "https://images.unsplash.com/photo-1539650116574-75c0c6d73ab2",
+      genre: "Mythology",
+      totalChapters: 72,
+      tags: ["Egyptian Mythology", "Gods", "Creation", "Ancient Wisdom", "Spirituality"]
+    });
+
     // Seed book chapters from "The Weavers of Eternity: A Chronicle of the Egyptian Gods"
     await this.createChapter({
       id: "prologue",
+      bookId: "weavers_of_eternity",
       title: "The Silence Before All",
       chapterNumber: 0,
       narrative: `Before the first dawn, before the river sang, before sand and star were named, there was silence. Not the silence of sleep, nor the silence after death, but the silence of a world unborn.
@@ -1708,6 +1797,7 @@ A whisper moved through the waters – a stirring, a breath. Creation longed to 
 
     await this.createChapter({
       id: "ch_1",
+      bookId: "weavers_of_eternity",
       title: "Nu – The Infinite Waters",
       chapterNumber: 1,
       narrative: `Nu was not god in the way others would be – with temples and names sung in hymns – but rather the canvas upon which existence would be painted. He was the dark water, the eternal tide, the father of beginnings and the grave of endings.
@@ -1725,7 +1815,8 @@ The waters spoke in whispers older than sound, carrying stories that had never b
     });
 
     await this.createChapter({
-      id: "ch_2", 
+      id: "ch_2",
+      bookId: "weavers_of_eternity", 
       title: "Kek & Heh – Shadows and Infinity",
       chapterNumber: 2,
       narrative: `From the deep currents of Nu emerged the first duality – not of light and dark as mortals understand, but of shadow and eternity.
@@ -1744,6 +1835,7 @@ Their dance created the first cosmic music, a rhythm that would pulse through al
 
     await this.createChapter({
       id: "ch_3",
+      bookId: "weavers_of_eternity",
       title: "Amun & Mut – The Hidden and the Mother",
       chapterNumber: 3,
       narrative: `As the cosmic forces settled into their eternal dance, two more powers emerged from Nu's depths – powers that would shape the very nature of divinity itself.

@@ -14,8 +14,21 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const books = pgTable("books", {
+  id: varchar("id").primaryKey(),
+  title: text("title").notNull(),
+  author: text("author").notNull(),
+  description: text("description").notNull(),
+  coverImage: text("cover_image"),
+  genre: text("genre").notNull(),
+  totalChapters: integer("total_chapters").notNull().default(0),
+  tags: jsonb("tags").default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const bookChapters = pgTable("book_chapters", {
   id: varchar("id").primaryKey(),
+  bookId: varchar("book_id").references(() => books.id).notNull(),
   title: text("title").notNull(),
   chapterNumber: integer("chapter_number").notNull(),
   narrative: text("narrative").notNull(),
@@ -105,6 +118,10 @@ export const insertUserSchema = createInsertSchema(users).omit({
   id: z.string().optional(), // Make id optional so it can be provided
 });
 
+export const insertBookSchema = createInsertSchema(books).omit({
+  createdAt: true,
+});
+
 export const insertBookChapterSchema = createInsertSchema(bookChapters);
 
 export const insertHistoryEventSchema = createInsertSchema(historyEvents);
@@ -133,6 +150,9 @@ export const insertDeitySchema = createInsertSchema(deities);
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Book = typeof books.$inferSelect;
+export type InsertBook = z.infer<typeof insertBookSchema>;
 
 export type BookChapter = typeof bookChapters.$inferSelect;
 export type InsertBookChapter = z.infer<typeof insertBookChapterSchema>;
