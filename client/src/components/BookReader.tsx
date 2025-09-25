@@ -201,7 +201,7 @@ export default function BookReader({ chapterId, onChapterChange, bookId }: BookR
           {/* Book Content */}
           <div className={`prose max-w-none font-serif leading-relaxed ${getFontSizeClass()}`}>
             <div className="first-letter:text-6xl first-letter:font-serif first-letter:font-bold first-letter:text-accent first-letter:mr-2 first-letter:float-left first-letter:leading-none">
-              {chapter.narrative.split('\n\n').map((paragraph: string, index: number) => (
+              {String(chapter.narrative || '').split('\n\n').map((paragraph, index) => (
                 <p key={index} className={index === 0 ? "" : "mt-4"}>
                   {paragraph}
                 </p>
