@@ -6,6 +6,9 @@ import TimelineExplorer from "./TimelineExplorer";
 import MeditationModule from "./MeditationModule";
 import ProfileModal from "./ProfileModal";
 import CharacterGallery from "./CharacterGallery";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 
 export default function Layout() {
   const [currentView, setCurrentView] = useState("book");
@@ -14,6 +17,8 @@ export default function Layout() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showCharacterGallery, setShowCharacterGallery] = useState(false);
   const [currentChapter, setCurrentChapter] = useState("prologue");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleNavigation = (view: string) => {
     switch (view) {
@@ -39,11 +44,29 @@ export default function Layout() {
       <Sidebar 
         currentView={currentView} 
         onNavigate={handleNavigation}
+        isOpen={isMobile ? sidebarOpen : true}
+        onClose={() => setSidebarOpen(false)}
       />
       
       <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile Header with Hamburger Menu */}
+        {isMobile && (
+          <header className="bg-card border-b border-border p-4 flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 min-h-[44px] min-w-[44px] touch-manipulation"
+              data-testid="button-menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <h1 className="text-lg font-semibold truncate">Devan Avatra</h1>
+            <div className="w-11" /> {/* Spacer for centering */}
+          </header>
+        )}
         {currentView === "book" && (
-          <div className="flex-1 flex">
+          <div className={`flex-1 ${isMobile ? 'flex flex-col' : 'flex'}}`}>
             <BookReader 
               chapterId={currentChapter}
               onChapterChange={setCurrentChapter}
