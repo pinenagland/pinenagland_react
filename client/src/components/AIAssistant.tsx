@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { 
   Bot, 
   User, 
@@ -42,6 +44,7 @@ interface Message {
 
 export default function AIAssistant({ chapterId, standalone = false }: AIAssistantProps) {
   const { firebaseUser } = useAuth();
+  const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
@@ -50,7 +53,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
     }
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(isMobile && !standalone); // Default minimized on mobile
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -117,23 +120,39 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
 
   if (isMinimized && !standalone) {
     return (
-      <div className="fixed bottom-4 right-4 z-40">
+      <div className={cn(
+        "z-40",
+        isMobile ? "fixed bottom-4 right-4" : "fixed bottom-4 right-4"
+      )}>
         <Button
           onClick={() => setIsMinimized(false)}
-          className="rounded-full w-12 h-12 gradient-accent"
+          className={cn(
+            "rounded-full gradient-accent shadow-lg",
+            isMobile ? "w-14 h-14" : "w-12 h-12"
+          )}
           data-testid="button-expand-ai"
         >
-          <Bot className="w-6 h-6" />
+          <Bot className={isMobile ? "w-7 h-7" : "w-6 h-6"} />
         </Button>
       </div>
     );
   }
 
   return (
-    <div className={`${standalone ? 'w-full max-w-4xl mx-auto' : 'w-96'} bg-card border-l border-border flex flex-col`}>
+    <div className={cn(
+      "bg-card flex flex-col",
+      standalone 
+        ? "w-full max-w-4xl mx-auto" 
+        : isMobile 
+          ? "fixed inset-0 z-50 border-none" 
+          : "w-96 border-l border-border"
+    )}>
       
       {/* AI Assistant Header */}
-      <CardHeader className="p-4 border-b border-border">
+      <CardHeader className={cn(
+        "border-b border-border",
+        isMobile && !standalone ? "p-3" : "p-4"
+      )}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
             <img src={devanAvatraLogo} alt="Devan Avatra" className="w-8 h-8 object-cover" />
@@ -146,6 +165,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
             <Button
               variant="ghost"
               size="sm"
+              className={cn(isMobile && "min-h-[40px] min-w-[40px] p-2")}
               onClick={() => setIsMinimized(true)}
               data-testid="button-minimize-ai"
             >
@@ -241,14 +261,20 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
 
       {/* Quick Questions */}
       {!standalone && (
-        <div className="border-t border-border pt-4 px-4">
+        <div className={cn(
+          "border-t border-border pt-4",
+          isMobile ? "px-3" : "px-4"
+        )}>
           <h4 className="text-sm font-medium mb-2">Quick Questions</h4>
           <div className="space-y-2">
-            {quickQuestions.slice(0, 3).map((question, index) => (
+            {quickQuestions.slice(0, isMobile ? 2 : 3).map((question, index) => (
               <Button
                 key={index}
                 variant="ghost"
-                className="w-full text-left text-xs p-2 h-auto bg-secondary/50 hover:bg-secondary justify-start"
+                className={cn(
+                  "w-full text-left p-2 h-auto bg-secondary/50 hover:bg-secondary justify-start touch-manipulation",
+                  isMobile ? "text-xs min-h-[40px]" : "text-xs"
+                )}
                 onClick={() => {
                   setInputValue(question);
                   handleSendMessage();
@@ -263,27 +289,42 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
       )}
 
       {/* Chat Input */}
-      <div className="p-4 border-t border-border">
+      <div className={cn(
+        "border-t border-border",
+        isMobile ? "p-3 pb-4" : "p-4"
+      )}>
         <div className="flex gap-2">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder={`Ask about ${chapterId ? 'this chapter' : 'Egyptian gods'}, mythology, or the divine chronicles...`}
-            className="flex-1"
+            placeholder={isMobile 
+              ? `Ask about ${chapterId ? 'chapter' : 'Egyptian gods'}...`
+              : `Ask about ${chapterId ? 'this chapter' : 'Egyptian gods'}, mythology, or the divine chronicles...`
+            }
+            className={cn(
+              "flex-1",
+              isMobile && "min-h-[44px] text-base" // Prevent zoom on mobile
+            )}
             disabled={aiQueryMutation.isPending}
             data-testid="input-ai-chat"
           />
           <Button 
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || aiQueryMutation.isPending}
+            className={cn(
+              isMobile && "min-h-[44px] min-w-[44px] p-3"
+            )}
             data-testid="button-send-message"
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Press Enter to send • Devan Avatra will fact-check your question
+        <p className={cn(
+          "text-muted-foreground mt-2",
+          isMobile ? "text-xs" : "text-xs"
+        )}>
+          {isMobile ? "Tap to send" : "Press Enter to send"} • Devan Avatra will fact-check your question
         </p>
       </div>
     </div>

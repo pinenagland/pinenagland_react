@@ -12,6 +12,8 @@ import {
   Bookmark,
   Maximize2
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import type { BookChapter } from "@shared/schema";
 
 interface BookReaderProps {
@@ -22,6 +24,7 @@ interface BookReaderProps {
 export default function BookReader({ chapterId, onChapterChange }: BookReaderProps) {
   const [fontSize, setFontSize] = useState("text-lg");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobile = useIsMobile();
   
   const getFontSizeClass = () => {
     switch (fontSize) {
@@ -79,29 +82,44 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
   return (
     <div className={`flex-1 flex flex-col ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : ''}`}>
       {/* Top Bar */}
-      <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
-        <div className="flex items-center gap-4">
-          <h2 className="font-serif text-xl font-semibold">{chapter.title}</h2>
+      <header className={cn(
+        "bg-card border-b border-border flex items-center justify-between",
+        isMobile ? "h-14 px-4 flex-col gap-2 py-2" : "h-16 px-6"
+      )}>
+        <div className={cn(
+          "flex items-center gap-2",
+          isMobile ? "w-full justify-between" : "gap-4"
+        )}>
+          <h2 className={cn(
+            "font-serif font-semibold truncate",
+            isMobile ? "text-lg flex-1" : "text-xl"
+          )}>{chapter.title}</h2>
           {chapter.era && (
-            <Badge variant="secondary" className="bg-accent/10 text-accent">
+            <Badge variant="secondary" className="bg-accent/10 text-accent text-xs">
               {chapter.era}
             </Badge>
           )}
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className={cn(
+          "flex items-center",
+          isMobile ? "w-full justify-between gap-2" : "gap-4"
+        )}>
           {/* Progress indicator */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Progress:</span>
-            <Progress value={progressPercent} className="w-20" />
-            <span>{Math.round(progressPercent)}%</span>
+          <div className={cn(
+            "flex items-center gap-2 text-sm text-muted-foreground",
+            isMobile && "flex-1 min-w-0"
+          )}>
+            {!isMobile && <span>Progress:</span>}
+            <Progress value={progressPercent} className={isMobile ? "flex-1" : "w-20"} />
+            <span className="text-xs">{Math.round(progressPercent)}%</span>
           </div>
           
           {/* Reading controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button 
               variant="ghost" 
-              size="sm"
+              size={isMobile ? "sm" : "sm"}
               onClick={() => {
                 setFontSize(prevSize => {
                   switch (prevSize) {
@@ -112,20 +130,26 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
                   }
                 });
               }}
+              className={cn(isMobile && "min-h-[40px] min-w-[40px] p-2")}
               data-testid="button-font-size"
             >
               <Type className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" data-testid="button-theme">
-              <Palette className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" data-testid="button-bookmark">
-              <Bookmark className="w-4 h-4" />
-            </Button>
+            {!isMobile && (
+              <>
+                <Button variant="ghost" size="sm" data-testid="button-theme">
+                  <Palette className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="sm" data-testid="button-bookmark">
+                  <Bookmark className="w-4 h-4" />
+                </Button>
+              </>
+            )}
             <Button 
               variant="ghost" 
-              size="sm"
+              size={isMobile ? "sm" : "sm"}
               onClick={() => setIsFullscreen(!isFullscreen)}
+              className={cn(isMobile && "min-h-[40px] min-w-[40px] p-2")}
               data-testid="button-fullscreen"
             >
               <Maximize2 className="w-4 h-4" />
@@ -136,7 +160,10 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
 
       {/* Book Content */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto p-8">
+        <div className={cn(
+          "mx-auto",
+          isMobile ? "p-4 max-w-none" : "p-8 max-w-4xl"
+        )}>
           
           {/* Chapter Header */}
           <div className="mb-8">
