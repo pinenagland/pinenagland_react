@@ -135,6 +135,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Book routes
+  app.get("/api/books", async (req, res) => {
+    try {
+      const books = await storage.getAllBooks();
+      res.json(books);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get books" });
+    }
+  });
+
+  app.get("/api/books/:id", async (req, res) => {
+    try {
+      const book = await storage.getBook(req.params.id);
+      if (!book) {
+        return res.status(404).json({ message: "Book not found" });
+      }
+      res.json(book);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get book" });
+    }
+  });
+
+  app.get("/api/books/:id/chapters", async (req, res) => {
+    try {
+      const chapters = await storage.getChaptersByBook(req.params.id);
+      res.json(chapters);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to get book chapters" });
+    }
+  });
+
+  // Chapter routes
   app.get("/api/chapters", async (req, res) => {
     try {
       const chapters = await storage.getAllChapters();
