@@ -171,12 +171,12 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
               <span className="text-accent font-mono text-sm">CH.{chapter.chapterNumber}</span>
               <div className="flex-1 h-px bg-border"></div>
               {chapter.timeSpan && (
-                <span className="text-muted-foreground text-sm">{chapter.timeSpan}</span>
+                <span className="text-muted-foreground text-sm">{String(chapter.timeSpan)}</span>
               )}
             </div>
             <h1 className="font-serif text-4xl font-semibold mb-4">{chapter.title}</h1>
             {chapter.commentary && (
-              <p className="text-muted-foreground text-lg leading-relaxed">{chapter.commentary}</p>
+              <p className="text-muted-foreground text-lg leading-relaxed">{String(chapter.commentary)}</p>
             )}
           </div>
 
@@ -197,7 +197,7 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
           {/* Book Content */}
           <div className={`prose max-w-none font-serif leading-relaxed ${getFontSizeClass()}`}>
             <div className="first-letter:text-6xl first-letter:font-serif first-letter:font-bold first-letter:text-accent first-letter:mr-2 first-letter:float-left first-letter:leading-none">
-              {chapter.narrative.split('\n\n').map((paragraph, index) => (
+              {chapter.narrative.split('\n\n').map((paragraph: string, index: number) => (
                 <p key={index} className={index === 0 ? "" : "mt-4"}>
                   {paragraph}
                 </p>
