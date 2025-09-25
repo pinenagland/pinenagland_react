@@ -130,7 +130,7 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
                   }
                 });
               }}
-              className={cn(isMobile && "min-h-[40px] min-w-[40px] p-2")}
+              className={cn(isMobile && "min-h-[44px] min-w-[44px] p-2")}
               data-testid="button-font-size"
             >
               <Type className="w-4 h-4" />
@@ -149,7 +149,7 @@ export default function BookReader({ chapterId, onChapterChange }: BookReaderPro
               variant="ghost" 
               size={isMobile ? "sm" : "sm"}
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className={cn(isMobile && "min-h-[40px] min-w-[40px] p-2")}
+              className={cn(isMobile && "min-h-[44px] min-w-[44px] p-2")}
               data-testid="button-fullscreen"
             >
               <Maximize2 className="w-4 h-4" />

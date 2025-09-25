@@ -66,7 +66,7 @@ export default function Layout() {
           </header>
         )}
         {currentView === "book" && (
-          <div className={`flex-1 ${isMobile ? 'flex flex-col' : 'flex'}}`}>
+          <div className={`flex-1 ${isMobile ? 'flex flex-col' : 'flex'}`}>
             <BookReader 
               chapterId={currentChapter}
               onChapterChange={setCurrentChapter}

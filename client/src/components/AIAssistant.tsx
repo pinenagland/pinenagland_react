@@ -165,7 +165,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
             <Button
               variant="ghost"
               size="sm"
-              className={cn(isMobile && "min-h-[40px] min-w-[40px] p-2")}
+              className={cn(isMobile && "min-h-[44px] min-w-[44px] p-2")}
               onClick={() => setIsMinimized(true)}
               data-testid="button-minimize-ai"
             >
@@ -184,7 +184,10 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
       </CardHeader>
 
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-96">
+      <div className={cn(
+        "flex-1 overflow-y-auto p-4 space-y-4",
+        isMobile && !standalone ? "h-full" : "max-h-96"
+      )}>
         {messages.map((message, index) => (
           <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
             {message.role === "ai" && (
