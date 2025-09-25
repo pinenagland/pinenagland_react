@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import AuthModal from "@/components/auth/AuthModal";
 import { 
   X, 
   BookOpen, 
@@ -70,18 +71,35 @@ export default function ProfileModal({ onClose }: ProfileModalProps) {
     enabled: !!firebaseUser?.uid,
   });
 
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   if (!firebaseUser) {
     return (
-      <Dialog open onOpenChange={onClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Profile & Goals</DialogTitle>
-          </DialogHeader>
-          <p className="text-center text-muted-foreground py-8">
-            Please sign in to access your profile and reading goals.
-          </p>
-        </DialogContent>
-      </Dialog>
+      <>
+        <Dialog open onOpenChange={onClose}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Profile & Goals</DialogTitle>
+            </DialogHeader>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-6">
+                Please sign in to access your profile and reading goals.
+              </p>
+              <Button 
+                onClick={() => setShowAuthModal(true)}
+                className="w-full"
+                data-testid="button-profile-signin"
+              >
+                Sign In / Create Account
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <AuthModal 
+          isOpen={showAuthModal} 
+          onClose={() => setShowAuthModal(false)} 
+        />
+      </>
     );
   }
 
