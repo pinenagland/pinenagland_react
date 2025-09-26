@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import BookReader from "./BookReader";
 import AIAssistant from "./AIAssistant";
@@ -20,6 +20,15 @@ export default function Layout() {
   const [selectedBookId, setSelectedBookId] = useState("weavers_of_eternity"); // Default to Egyptian mythology book
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  // Reset chapter when book changes to ensure valid chapter for selected book
+  useEffect(() => {
+    if (selectedBookId === "weavers_of_eternity") {
+      setCurrentChapter("prologue"); // Start with prologue for Egyptian mythology
+    } else if (selectedBookId === "can_discovering_god") {
+      setCurrentChapter("can_ch1"); // Start with first chapter for CAN book
+    }
+  }, [selectedBookId]);
 
   const handleNavigation = (view: string) => {
     switch (view) {
