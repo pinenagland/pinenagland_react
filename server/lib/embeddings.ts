@@ -149,7 +149,7 @@ export class SemanticSearchEngine {
   }
 
   /**
-   * Generate embedding for text using Google Gemini with caching
+   * Generate embedding for text using Google Gemini with caching and timeout
    */
   private async generateEmbedding(text: string): Promise<number[]> {
     // Check if genAI is initialized
@@ -170,7 +170,13 @@ export class SemanticSearchEngine {
         model: "text-embedding-004"
       });
       
-      const result = await model.embedContent(text);
+      // Add timeout to prevent hanging
+      const embedPromise = model.embedContent(text);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Embedding generation timeout after 10 seconds')), 10000);
+      });
+      
+      const result = await Promise.race([embedPromise, timeoutPromise]);
       const embedding = result.embedding.values;
       
       // Cache the result
