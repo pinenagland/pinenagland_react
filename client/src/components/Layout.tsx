@@ -73,7 +73,7 @@ export default function Layout() {
             >
               <Menu className="w-5 h-5" />
             </Button>
-            <h1 className="text-lg font-semibold truncate">Devan Avatra</h1>
+            <h1 className="text-lg font-semibold truncate">Devatra</h1>
             <div className="w-11" /> {/* Spacer for centering */}
           </header>
         )}
@@ -91,7 +91,7 @@ export default function Layout() {
         {currentView === "chat" && (
           <div className="flex-1 p-8">
             <div className="max-w-4xl mx-auto">
-              <h1 className="text-3xl font-serif font-semibold mb-6">Devan Avatra Conversations</h1>
+              <h1 className="text-3xl font-serif font-semibold mb-6">Devatra Conversations</h1>
               <AIAssistant chapterId={null} standalone={true} />
             </div>
           </div>

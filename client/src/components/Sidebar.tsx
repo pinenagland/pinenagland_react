@@ -1,5 +1,5 @@
 import { Eye, BookOpen, MessageCircle, History, Clover, UserCircle, Settings, LogIn, LogOut, X } from "lucide-react";
-import devanAvatraLogo from "@/assets/devan-avatra-logo.jpg";
+import pinenaglandLogo from "@/assets/pinenagland-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import AuthModal from "@/components/auth/AuthModal";
@@ -31,7 +31,7 @@ export default function Sidebar({ currentView, onNavigate, selectedBookId, onBoo
   const navigationItems = [
     { id: "characters", label: "Character Gallery", icon: Eye },
     { id: "book", label: "Book Reader", icon: BookOpen },
-    { id: "chat", label: "Devan Avatra", icon: MessageCircle },
+    { id: "chat", label: "Devatra", icon: MessageCircle },
     { id: "timeline", label: "History Explorer", icon: History },
     { id: "meditation", label: "Meditation & Yoga", icon: Clover },
     { id: "profile", label: "Profile & Goals", icon: UserCircle },
@@ -72,7 +72,7 @@ export default function Sidebar({ currentView, onNavigate, selectedBookId, onBoo
         )}
         <div className="flex items-center justify-center">
           <div className="w-16 h-16 rounded-lg overflow-hidden flex items-center justify-center">
-            <img src={devanAvatraLogo} alt="Devan Avatra" className="w-16 h-16 object-cover" />
+            <img src={pinenaglandLogo} alt="Pinenagland" className="w-16 h-16 object-cover" />
           </div>
         </div>
       </div>
