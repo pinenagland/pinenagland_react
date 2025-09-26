@@ -137,7 +137,7 @@ export default function CharacterGallery({ onClose }: CharacterGalleryProps) {
             </div>
 
             {/* Deities Grid organized by Parts */}
-            <ScrollArea className="flex-1 pr-4">
+            <ScrollArea className="flex-1 h-full pr-4">
               <div className="space-y-8">
                 {displayParts.map((part) => {
                   const partDeities = searchTerm ? filteredDeitiesByPart[part] || [] : deitiesByPart[part] || [];
