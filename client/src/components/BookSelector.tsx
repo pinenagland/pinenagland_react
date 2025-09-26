@@ -7,6 +7,19 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Import book covers
+import weaversOfEternityCover from "@assets/THE WEAVERS OF ETERNITY-Book cover_1758843792985.png";
+import canDiscoveringGodCover from "@assets/CAN Book cover_1758843792985.png";
+
+// Book cover mapping function
+const getBookCover = (bookId: string): string | null => {
+  const coverMap: Record<string, string> = {
+    'weavers_of_eternity': weaversOfEternityCover,
+    'can_discovering_god': canDiscoveringGodCover,
+  };
+  return coverMap[bookId] || null;
+};
+
 interface Book {
   id: string;
   title: string;
@@ -119,9 +132,9 @@ export default function BookSelector({ selectedBookId, onBookSelect }: BookSelec
               >
                 <CardContent className="p-3">
                   <div className="flex gap-3">
-                    {book.coverImage ? (
+                    {getBookCover(book.id) ? (
                       <img
-                        src={book.coverImage}
+                        src={getBookCover(book.id)!}
                         alt={`${book.title} cover`}
                         className="w-12 h-16 object-cover rounded"
                       />
