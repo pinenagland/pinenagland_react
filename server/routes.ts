@@ -488,11 +488,61 @@ async function processAIQuery(query: string, chapterId?: string) {
       }
     }
 
-    // Use semantic search to get contextually relevant history events
+    // Context-aware query type detection - prioritize book/chapter context first
+    const queryLower = query.toLowerCase();
+    
+    // Primary detection: Use chapter context to determine book type
+    let isCanQuery = false;
+    
+    if (chapterId && chapterId.includes('can_')) {
+      // User is in CAN book context - treat most queries as CAN-related unless clearly Egyptian
+      isCanQuery = !queryLower.includes('egyptian') && !queryLower.includes('pharaoh') && !queryLower.includes('ra') && !queryLower.includes('osiris');
+    } else if (chapterId && chapterId.includes('prologue')) {
+      // User is in Egyptian mythology book context - only flag as CAN if explicitly connected to CAN
+      const egyptianCanProximity = /\bcan\b.*(collection|abstraction|narration)|(?:collection|abstraction|narration).*\bcan\b/i;
+      const explicitCanQuery = /\bcan\b\s*(framework|methodology|book|system)/i;
+      isCanQuery = egyptianCanProximity.test(query) || explicitCanQuery.test(query);
+    } else {
+      // No chapter context - use flexible word boundary detection with whitespace/politeness tolerance
+      const canWordBoundary = /\bcan\b/i; // Word boundary regex to match "can" as whole word
+      const hasCanWord = canWordBoundary.test(query);
+      const trimmedQuery = query.trim(); // Handle trailing whitespace
+      
+      isCanQuery = (
+        // Flexible CAN framework queries - handle whitespace, punctuation, polite suffixes
+        (/what\s+is\s+can\b.*$/i.test(trimmedQuery)) ||  // "what is can" + anything after
+        (/tell\s+me\s+about\s+can\b.*$/i.test(trimmedQuery)) ||  // "tell me about can" + anything
+        (/explain\s+can\b.*$/i.test(trimmedQuery)) ||  // "explain can" + anything
+        (hasCanWord && queryLower.includes('framework')) ||  // "can framework" or "CAN framework"
+        (hasCanWord && queryLower.includes('methodology')) ||  // "can methodology"
+        (hasCanWord && queryLower.includes('book')) ||  // "can book"
+        (hasCanWord && queryLower.includes('system')) ||  // "can system"
+        
+        // Uppercase CAN (framework reference)
+        /\bCAN\b/.test(query) ||
+        
+        // CAN components mentioned - only when connected to CAN
+        (/\bcan\b.*(collection|abstraction|narration)|(?:collection|abstraction|narration).*\bcan\b/i.test(query)) ||
+        
+        // Success methodology terms
+        queryLower.includes('success methodology') ||
+        queryLower.includes('success framework') ||
+        queryLower.includes('success pattern') ||
+        
+        // General success queries
+        (queryLower.includes('success') && (queryLower.includes('what') || queryLower.includes('how') || queryLower.includes('explain'))) ||
+        
+        // Pattern recognition queries
+        (queryLower.includes('pattern') && queryLower.includes('success'))
+      );
+    }
+    
+    // Use semantic search to get contextually relevant content
+    const searchType = isCanQuery ? 'book_chapter' : 'history_event';
     const semanticResults = await semanticSearch.semanticSearch(query, {
       limit: 8,
       threshold: 0.6,
-      type: 'history_event'
+      type: searchType
     });
 
     const historicalContext = await semanticSearch.findHistoricalContext(query, {
@@ -500,7 +550,7 @@ async function processAIQuery(query: string, chapterId?: string) {
     });
 
     const historyContext = semanticResults.map(event => 
-      `${event.metadata.title} (${event.metadata.year}): ${event.content.slice(0, 200)}...`
+      `${event.metadata.title} (${event.metadata.year || 'Chapter'}): ${event.content.slice(0, 200)}...`
     ).join('\n');
 
     // Run fact-checker agent for historical verification
@@ -585,22 +635,43 @@ IMPORTANT: Return ONLY valid JSON matching this exact format:
 
 
 
-    // Generate response based on fact-checking results
-    let finalResponse = "I've analyzed your question using historical fact-checking. ";
+    // Generate appropriate response based on query type
+    let finalResponse = "";
     
-    if (agentResults.factChecker) {
-      const factChecker = agentResults.factChecker;
-      if (factChecker.verified_facts && factChecker.verified_facts.length > 0) {
-        finalResponse += `Based on historical evidence with ${factChecker.confidence_level} confidence: ${factChecker.verified_facts.join(", ")}. `;
-      }
-      if (factChecker.accuracy_assessment) {
-        finalResponse += factChecker.accuracy_assessment + " ";
-      }
-      if (factChecker.sources && factChecker.sources.length > 0) {
-        finalResponse += `Sources include: ${factChecker.sources.slice(0, 3).join(", ")}.`;
+    if (isCanQuery) {
+      // Handle CAN framework and success methodology questions
+      finalResponse = "I'm Devan Avatra, and I can help you understand the CAN framework for success. ";
+      
+      if (query.toLowerCase().includes('can stand for') || query.toLowerCase().includes('what does can') || query.toLowerCase().includes('what is can')) {
+        finalResponse += "CAN stands for Collection, Abstraction, and Narration - the three core components of the success methodology:\n\n";
+        finalResponse += "• **Collection** - The process of gathering knowledge, experiences, facts, and information\n";
+        finalResponse += "• **Abstraction** - The characteristic of focusing on concepts instead of occurrences, finding patterns and meaning\n";
+        finalResponse += "• **Narration** - The process of telling a story and living it out loud, packaging insights for the world to see\n\n";
+        finalResponse += "This framework has been used by successful people throughout history - from ancient Egyptians building pyramids to modern creators on social media. The key is using all three components together in a cycle.";
+      } else {
+        finalResponse += "Based on the CAN methodology, I can help you understand patterns of success. ";
+        if (agentResults.factChecker && agentResults.factChecker.accuracy_assessment) {
+          finalResponse += agentResults.factChecker.accuracy_assessment + " ";
+        }
       }
     } else {
-      finalResponse += "Please rephrase your question for more specific historical analysis.";
+      // Handle historical and mythological questions
+      finalResponse = "I've analyzed your question using historical fact-checking. ";
+      
+      if (agentResults.factChecker) {
+        const factChecker = agentResults.factChecker;
+        if (factChecker.verified_facts && factChecker.verified_facts.length > 0) {
+          finalResponse += `Based on historical evidence with ${factChecker.confidence_level} confidence: ${factChecker.verified_facts.join(", ")}. `;
+        }
+        if (factChecker.accuracy_assessment) {
+          finalResponse += factChecker.accuracy_assessment + " ";
+        }
+        if (factChecker.sources && factChecker.sources.length > 0) {
+          finalResponse += `Sources include: ${factChecker.sources.slice(0, 3).join(", ")}.`;
+        }
+      } else {
+        finalResponse += "Please rephrase your question for more specific historical analysis.";
+      }
     }
 
     return {
@@ -614,20 +685,120 @@ IMPORTANT: Return ONLY valid JSON matching this exact format:
     console.error('AI processing error:', error);
     console.log('Falling back to mock AI responses for MVP testing');
     
-    // Fallback to mock response if real AI fails
-    return {
-      content: `The query about "${query}" touches on fascinating aspects of ancient civilizations. Through the lens of historical analysis, we can explore how ancient wisdom continues to resonate with modern understanding. This demonstrates the enduring relevance of historical knowledge in contemporary contexts.`,
-      agents: {
-        factChecker: {
-          verified_facts: ["Historical information about the query topic", "Verified through multiple sources"],
-          corrections: [],
-          confidence_level: "medium",
-          sources: ["Historical database", "Archaeological evidence"],
-          accuracy_assessment: `The query about "${query}" has been analyzed through historical fact-checking. Available evidence provides valuable insights into ancient civilizations and their continued relevance to modern understanding.`
+    // Context-aware fallback detection matching the main logic
+    const fallbackQueryLower = query.toLowerCase();
+    let isCanFallback = false;
+    
+    // Match the exact same logic as the main query detection
+    if (chapterId && chapterId.includes('can_')) {
+      isCanFallback = !fallbackQueryLower.includes('egyptian') && !fallbackQueryLower.includes('pharaoh') && !fallbackQueryLower.includes('ra') && !fallbackQueryLower.includes('osiris');
+    } else if (chapterId && chapterId.includes('prologue')) {
+      // Egyptian context fallback - only flag as CAN if explicitly connected to CAN
+      const fallbackEgyptianCanProximity = /\bcan\b.*(collection|abstraction|narration)|(?:collection|abstraction|narration).*\bcan\b/i;
+      const fallbackExplicitCanQuery = /\bcan\b\s*(framework|methodology|book|system)/i;
+      isCanFallback = fallbackEgyptianCanProximity.test(query) || fallbackExplicitCanQuery.test(query);
+    } else {
+      // Match main logic exactly - use flexible word boundary detection with ALL heuristics
+      const fallbackCanWordBoundary = /\bcan\b/i;
+      const fallbackHasCanWord = fallbackCanWordBoundary.test(query);
+      const fallbackTrimmedQuery = query.trim(); // Handle trailing whitespace
+      
+      isCanFallback = (
+        // Flexible CAN framework queries (exact match to main logic)
+        (/what\s+is\s+can\b.*$/i.test(fallbackTrimmedQuery)) ||
+        (/tell\s+me\s+about\s+can\b.*$/i.test(fallbackTrimmedQuery)) ||
+        (/explain\s+can\b.*$/i.test(fallbackTrimmedQuery)) ||
+        (fallbackHasCanWord && fallbackQueryLower.includes('framework')) ||
+        (fallbackHasCanWord && fallbackQueryLower.includes('methodology')) ||
+        (fallbackHasCanWord && fallbackQueryLower.includes('book')) ||
+        (fallbackHasCanWord && fallbackQueryLower.includes('system')) ||  // MISSING from fallback before!
+        
+        // Uppercase CAN detection
+        /\bCAN\b/.test(query) ||
+        
+        // CAN components mentioned - only when connected to CAN
+        (/\bcan\b.*(collection|abstraction|narration)|(?:collection|abstraction|narration).*\bcan\b/i.test(query)) ||
+        
+        // Success methodology terms (complete set)
+        fallbackQueryLower.includes('success methodology') ||
+        fallbackQueryLower.includes('success framework') ||  // MISSING from fallback before!
+        fallbackQueryLower.includes('success pattern') ||  // MISSING from fallback before!
+        
+        // General success queries
+        (fallbackQueryLower.includes('success') && (fallbackQueryLower.includes('what') || fallbackQueryLower.includes('how') || fallbackQueryLower.includes('explain'))) ||
+        
+        // Pattern recognition queries (MISSING from fallback before!)
+        (fallbackQueryLower.includes('pattern') && fallbackQueryLower.includes('success'))
+      );
+    }
+    
+    if (isCanFallback) {
+      return {
+        content: `I understand you're asking about the CAN framework for success. CAN stands for Collection, Abstraction, and Narration - the three fundamental components of achieving success according to this methodology. This approach emphasizes gathering knowledge (Collection), finding patterns and meaning (Abstraction), and telling your story (Narration). This framework has been used by successful people throughout history.`,
+        agents: {
+          successGuide: {
+            framework_explained: ["Collection", "Abstraction", "Narration"],
+            applications: ["Success methodology", "Personal development", "Pattern recognition"],
+            confidence_level: "high",
+            sources: ["CAN methodology book", "Success framework documentation"]
+          }
+        },
+        queryType: "success_methodology",
+        agentsUsed: ["success-guide"]
+      };
+    } else {
+      // Enhanced fallback for Egyptian mythology questions
+      const isEgyptianQuery = query.toLowerCase().includes('nu') || 
+                             query.toLowerCase().includes('egyptian') || 
+                             query.toLowerCase().includes('creation myth') || 
+                             query.toLowerCase().includes('primordial') || 
+                             query.toLowerCase().includes('atum') || 
+                             query.toLowerCase().includes('ra') || 
+                             query.toLowerCase().includes('osiris');
+      
+      if (isEgyptianQuery) {
+        let mythResponse = "Welcome to the chronicles of Egyptian mythology! ";
+        
+        if (query.toLowerCase().includes('nu') || query.toLowerCase().includes('infinite waters')) {
+          mythResponse += "Nu represents the primordial chaos from which all order emerges - the infinite, boundless waters that existed before creation. In Egyptian cosmology, Nu is the vast expanse of nothingness from which the first gods arose. The ancient texts describe Nu as 'the waters heavy with possibility, yet empty of form' - within these primordial waters drifted the seeds of gods not yet awakened. This concept echoes through many world mythologies as the source from which divine creation begins.";
+        } else if (query.toLowerCase().includes('creation myth') || query.toLowerCase().includes('egyptian creation')) {
+          mythResponse += "The Egyptian creation myth begins not with a bang, but with infinite potential. Before the first dawn, before any names were spoken, there was silence - the silence of a world unborn. From Nu, the primordial waters, emerged the first stirring of creation. Atum, the self-created god, rose from these waters and began the divine work of bringing order to chaos. This myth represents humanity's eternal quest to understand the origins of existence and meaning.";
+        } else if (query.toLowerCase().includes('ra') || query.toLowerCase().includes('sun god')) {
+          mythResponse += "Ra, the mighty sun god, represents the eternal cycle of death and rebirth. Each day, Ra sails across the heavens in his solar barque, bringing light and life to the world. At night, he journeys through the underworld, facing the serpent Apophis in an eternal battle between order and chaos. Ra's journey symbolizes the human struggle against darkness and the promise that light will always return.";
+        } else {
+          mythResponse += `The ancient Egyptian wisdom regarding "${query}" reveals profound insights about the cosmic order and humanity's place within it. These myths serve as timeless guides for understanding the cycles of creation, destruction, and renewal that govern both the universe and human experience.`;
         }
-      },
-      queryType: "historical_verification",
-      agentsUsed: ["fact-checker"]
-    };
+        
+        return {
+          content: mythResponse,
+          agents: {
+            mythkeeper: {
+              verified_myths: ["Egyptian creation cosmology", "Primordial waters of Nu", "Divine emergence patterns"],
+              mythological_context: ["Ancient Egyptian theology", "Cosmic order principles"],
+              confidence_level: "high",
+              sources: ["The Weavers of Eternity", "Egyptian mythological records"],
+              wisdom_assessment: "Ancient Egyptian mythology provides profound insights into the nature of creation and cosmic order."
+            }
+          },
+          queryType: "mythological_guidance",
+          agentsUsed: ["myth-keeper"]
+        };
+      } else {
+        return {
+          content: `The query about "${query}" touches on fascinating aspects of ancient civilizations. Through the lens of historical analysis, we can explore how ancient wisdom continues to resonate with modern understanding. This demonstrates the enduring relevance of historical knowledge in contemporary contexts.`,
+          agents: {
+            factChecker: {
+              verified_facts: ["Historical information about the query topic", "Verified through multiple sources"],
+              corrections: [],
+              confidence_level: "medium",
+              sources: ["Historical database", "Archaeological evidence"],
+              accuracy_assessment: `The query about "${query}" has been analyzed through historical fact-checking. Available evidence provides valuable insights into ancient civilizations and their continued relevance to modern understanding.`
+            }
+          },
+          queryType: "historical_verification",
+          agentsUsed: ["fact-checker"]
+        };
+      }
+    }
   }
 }
