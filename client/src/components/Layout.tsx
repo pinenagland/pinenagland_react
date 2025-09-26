@@ -27,8 +27,6 @@ export default function Layout() {
       setCurrentChapter("prologue"); // Start with prologue for Egyptian mythology
     } else if (selectedBookId === "can_discovering_god") {
       setCurrentChapter("can_ch1"); // Start with first chapter for CAN book
-    } else if (selectedBookId === "the_falcon_and_the_eye") {
-      setCurrentChapter("horus_ch1"); // Start with first chapter for Horus book
     }
   }, [selectedBookId]);
 
