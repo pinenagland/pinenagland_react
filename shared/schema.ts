@@ -20,6 +20,9 @@ export const books = pgTable("books", {
   author: text("author").notNull(),
   description: text("description").notNull(),
   coverImage: text("cover_image"),
+  authorSpeech: text("author_speech"), // First page/author introduction
+  aboutTheBook: text("about_the_book"), // About the Book section
+  bookIndex: text("book_index"), // Table of contents/index
   genre: text("genre").notNull(),
   totalChapters: integer("total_chapters").notNull().default(0),
   tags: jsonb("tags").default([]),
