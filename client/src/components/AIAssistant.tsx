@@ -17,7 +17,7 @@ import {
   Brain, 
   Scroll
 } from "lucide-react";
-import devanAvatraLogo from "@/assets/devan-avatra-logo.jpg";
+import devatraLogo from "@/assets/devatra-logo.png";
 
 interface AIAssistantProps {
   chapterId: string | null;
@@ -48,7 +48,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "ai",
-      content: "Welcome! I'm Devan Avatra, your guide through The Weavers of Eternity. I can help you explore the chronicle of Egyptian gods, fact-check mythological details, and reveal the deeper meanings within these ancient stories. What aspect of the divine tapestry would you like to explore?",
+      content: "Welcome! I'm Devatra, your guide through The Weavers of Eternity. I can help you explore the chronicle of Egyptian gods, fact-check mythological details, and reveal the deeper meanings within these ancient stories. What aspect of the divine tapestry would you like to explore?",
       timestamp: new Date(),
     }
   ]);
@@ -155,10 +155,10 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
       )}>
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
-            <img src={devanAvatraLogo} alt="Devan Avatra" className="w-8 h-8 object-cover" />
+            <img src={devatraLogo} alt="Devatra" className="w-8 h-8 object-cover" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold">Devan Avatra</h3>
+            <h3 className="font-semibold">Devatra</h3>
             <p className="text-xs text-muted-foreground">AI Assistance</p>
           </div>
           {!standalone && (
@@ -192,7 +192,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
           <div key={index} className={`flex gap-3 ${message.role === "user" ? "justify-end" : ""}`}>
             {message.role === "ai" && (
               <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
-                <img src={devanAvatraLogo} alt="Devan Avatra" className="w-8 h-8 object-cover" />
+                <img src={devatraLogo} alt="Devatra" className="w-8 h-8 object-cover" />
               </div>
             )}
             
@@ -248,7 +248,7 @@ export default function AIAssistant({ chapterId, standalone = false }: AIAssista
         {aiQueryMutation.isPending && (
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
-              <img src={devanAvatraLogo} alt="Devan Avatra" className="w-8 h-8 object-cover" />
+              <img src={devatraLogo} alt="Devatra" className="w-8 h-8 object-cover" />
             </div>
             <div className="bg-muted p-3 rounded-lg">
               <div className="flex items-center gap-2">
