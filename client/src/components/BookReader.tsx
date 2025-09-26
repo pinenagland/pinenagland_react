@@ -19,6 +19,19 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import type { BookChapter } from "@shared/schema";
 
+// Import book covers
+import weaversOfEternityCover from "@assets/THE WEAVERS OF ETERNITY-Book cover_1758843792985.png";
+import canDiscoveringGodCover from "@assets/CAN Book cover_1758843792985.png";
+
+// Book cover mapping function
+const getBookCover = (bookId: string): string | null => {
+  const coverMap: Record<string, string> = {
+    'weavers_of_eternity': weaversOfEternityCover,
+    'can_discovering_god': canDiscoveringGodCover,
+  };
+  return coverMap[bookId] || null;
+};
+
 type ContentType = 'cover' | 'author-speech' | 'about-book' | 'index' | 'chapter';
 
 interface BookContent {
@@ -361,10 +374,10 @@ export default function BookReader({ chapterId, onChapterChange, bookId }: BookR
           </div>
 
           {/* Content Illustration */}
-          {currentContent.type === 'cover' && book?.coverImage && (
+          {currentContent.type === 'cover' && book && getBookCover(book.id) && (
             <div className="mb-8 text-center">
               <img 
-                src={book.coverImage} 
+                src={getBookCover(book.id)!} 
                 alt={`Cover of ${book.title}`}
                 className="w-full max-w-md mx-auto rounded-lg shadow-lg" 
               />
