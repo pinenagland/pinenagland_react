@@ -362,15 +362,15 @@ export default function MeditationModule({ onClose }: MeditationModuleProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl floating-panel">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+      <Card className="w-full max-w-2xl max-h-[95vh] flex flex-col floating-panel">
         
         {/* Meditation Header */}
-        <CardHeader className="border-b border-border">
+        <CardHeader className="border-b border-border flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-xl font-serif">Ancient Wisdom Practices</CardTitle>
-              <p className="text-muted-foreground">Meditation & yoga rooted in Nile Valley traditions</p>
+              <CardTitle className="text-lg sm:text-xl font-serif">Ancient Wisdom Practices</CardTitle>
+              <p className="text-sm text-muted-foreground">Meditation & yoga rooted in Nile Valley traditions</p>
             </div>
             <Button 
               variant="ghost" 
@@ -384,14 +384,14 @@ export default function MeditationModule({ onClose }: MeditationModuleProps) {
         </CardHeader>
 
         {/* Practice Selection */}
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6 flex-1 overflow-y-auto overscroll-y-contain">
           {isLoading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
               <p className="text-muted-foreground">Loading practices...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               
               {practices?.map((practice) => {
                 const Icon = practiceIcons[practice.type as keyof typeof practiceIcons] || Wind;
