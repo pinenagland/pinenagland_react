@@ -1852,6 +1852,84 @@ Together, Amun and Mut established the pattern of hidden wisdom and manifest nur
       era: "Mythological"
     });
 
+    // Also create the CAN Methodology book
+    await this.createBook({
+      id: "can_discovering_god",
+      title: "CAN-Discovering-God-Is-a-Phenomenon",
+      author: "The Eternal Falcon",
+      description: "A systematic methodology for understanding divine phenomena through the CAN framework: Context, Analysis, and Navigation.",
+      coverImage: "https://images.unsplash.com/photo-1518709268805-4e9042af2176",
+      genre: "Methodology",
+      totalChapters: 4,
+      tags: ["CAN Methodology", "Spiritual Development", "Systematic Approach", "Divine Understanding"]
+    });
+
+    // Create CAN book chapters
+    await this.createChapter({
+      id: "can_ch1",
+      bookId: "can_discovering_god",
+      title: "Understanding the CAN Framework",
+      chapterNumber: 1,
+      narrative: "The CAN methodology provides a systematic approach to understanding divine phenomena through three essential phases: Context (situational awareness), Analysis (deep examination), and Navigation (practical application). This framework transforms abstract spiritual concepts into accessible, actionable wisdom.",
+      commentary: "CAN offers a practical bridge between ancient wisdom and modern understanding, making spiritual development systematic rather than mystical.",
+      figures: ["https://images.unsplash.com/photo-1518709268805-4e9042af2176"],
+      tags: ["CAN Framework", "Methodology", "Spiritual Development"],
+      timeSpan: "Present Day",
+      era: "Contemporary"
+    });
+
+    // Create The Falcon and the Eye: The Eternal Story of Horus book (Freytag's Five-Act Structure)
+    await this.createBook({
+      id: "the_falcon_and_the_eye",
+      title: "The Falcon and the Eye: The Eternal Story of Horus",
+      author: "The Eternal Falcon",
+      description: "A complete 72-chapter epic following the eternal falcon god Horus through history, structured according to Freytag's Five-Act dramatic arc from divine origins to contemporary relevance.",
+      coverImage: "https://images.unsplash.com/photo-1444927714506-8492d94b5ba0",
+      genre: "Historical Epic",
+      totalChapters: 72,
+      tags: ["Horus", "Egyptian Mythology", "Five-Act Structure", "Historical Epic", "Divine Journey"]
+    });
+
+    // Create key Horus book chapters (Act I - Exposition)
+    await this.createChapter({
+      id: "horus_ch1",
+      bookId: "the_falcon_and_the_eye",
+      title: "The Birth of Horus",
+      chapterNumber: 1,
+      narrative: "In the Delta marshes where reeds whispered ancient secrets and waters ran deep with divine promise, Isis brought forth the falcon prince who would reshape the cosmic order. Horus emerged into a world torn by the violence of Set's jealousy, yet his first cry pierced the darkness with the promise of justice restored.",
+      commentary: "The birth of Horus in Act I establishes the exposition of Freytag's dramatic structure, introducing the divine hero whose journey will span cosmic and historical dimensions.",
+      figures: ["https://images.unsplash.com/photo-1444927714506-8492d94b5ba0"],
+      tags: ["Birth", "Horus", "Delta Marshes", "Divine Origins", "Exposition"],
+      timeSpan: "Mythological Past",
+      era: "Divine Origins"
+    });
+
+    await this.createChapter({
+      id: "horus_ch2",
+      bookId: "the_falcon_and_the_eye",
+      title: "The Hidden Prince",
+      chapterNumber: 2,
+      narrative: "Protected by Isis's magic and the loyalty of the marsh dwellers, young Horus grew in secret strength while Set ruled Egypt with increasing corruption. The hidden prince learned the ways of both divine power and mortal compassion, preparing for the destiny that awaited him.",
+      commentary: "The hidden growth period develops character motivation and establishes the stakes of the coming conflict, essential elements of dramatic exposition.",
+      figures: ["https://images.unsplash.com/photo-1444927714506-8492d94b5ba0"],
+      tags: ["Hidden Prince", "Isis Protection", "Secret Growth", "Character Development", "Exposition"],
+      timeSpan: "Youth of Horus",
+      era: "Divine Origins"
+    });
+
+    await this.createChapter({
+      id: "horus_ch3",
+      bookId: "the_falcon_and_the_eye",
+      title: "The Eye Awakens",
+      chapterNumber: 3,
+      narrative: "As Horus reached divine maturity, his famous eye began to manifest its supernatural powers of sight and protection. This awakening marked the transition from hidden prince to active challenger of Set's corrupt rule, setting the stage for the cosmic battle to come.",
+      commentary: "The awakening of Horus's power marks the inciting incident that launches the dramatic action, transitioning from exposition toward rising action.",
+      figures: ["https://images.unsplash.com/photo-1444927714506-8492d94b5ba0"],
+      tags: ["Eye of Horus", "Divine Powers", "Awakening", "Inciting Incident", "Exposition"],
+      timeSpan: "Coming of Age",
+      era: "Divine Origins"
+    });
+
     // Seed historical events
     await this.createHistoryEvent({
       id: "ancient_egypt_unification",
