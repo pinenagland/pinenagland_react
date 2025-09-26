@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X, Search, Clock, MapPin, Filter, Calendar } from "lucide-react";
 import type { HistoryEvent } from "@shared/schema";
 
@@ -142,8 +143,9 @@ export default function TimelineExplorer({ onClose }: TimelineExplorerProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-4xl h-[600px] flex flex-col floating-panel">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="w-full max-w-4xl h-[600px] flex flex-col p-0">
+        <Card className="w-full h-full flex flex-col border-0">
         
         {/* Timeline Header */}
         <CardHeader className="border-b border-border">
@@ -366,7 +368,8 @@ export default function TimelineExplorer({ onClose }: TimelineExplorerProps) {
           )}
         </CardContent>
 
-      </Card>
-    </div>
+        </Card>
+      </DialogContent>
+    </Dialog>
   );
 }

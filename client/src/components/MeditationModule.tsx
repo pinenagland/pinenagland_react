@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   X, 
   Play, 
@@ -215,8 +216,9 @@ export default function MeditationModule({ onClose }: MeditationModuleProps) {
     const progress = selectedPractice.duration > 0 ? (currentTime / (selectedPractice.duration * 60)) * 100 : 0;
     
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <Card className="w-full max-w-2xl floating-panel">
+      <Dialog open={true} onOpenChange={(open) => !open && endPractice()}>
+        <DialogContent className="w-full max-w-2xl p-0">
+          <Card className="w-full border-0">
           <CardHeader className="border-b border-border">
             <div className="flex items-center justify-between">
               <div>
@@ -356,14 +358,16 @@ export default function MeditationModule({ onClose }: MeditationModuleProps) {
               </Button>
             </div>
           </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-2xl max-h-[95vh] flex flex-col floating-panel">
+    <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="w-full max-w-2xl max-h-[95vh] flex flex-col p-0">
+        <Card className="w-full h-full flex flex-col border-0">
         
         {/* Meditation Header */}
         <CardHeader className="border-b border-border flex-shrink-0">
@@ -470,7 +474,8 @@ export default function MeditationModule({ onClose }: MeditationModuleProps) {
           )}
         </CardContent>
 
-      </Card>
-    </div>
+        </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
